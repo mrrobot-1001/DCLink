@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useRef } from "react";
-import { X, ImageIcon } from "lucide-react";
+import { useState, useRef, useEffect } from "react";
+import { X, ImageIcon, Trash2 } from "lucide-react";
+import Image from "next/image";
 
 type PostFormProps = {
   isOpen: boolean;
@@ -11,7 +12,20 @@ type PostFormProps = {
 export default function PostForm({ isOpen, onClose }: PostFormProps) {
   const [content, setContent] = useState("");
   const [image, setImage] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (image) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagePreview(reader.result as string);
+      };
+      reader.readAsDataURL(image);
+    } else {
+      setImagePreview(null);
+    }
+  }, [image]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -25,6 +39,14 @@ export default function PostForm({ isOpen, onClose }: PostFormProps) {
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       setImage(e.target.files[0]);
+    }
+  };
+
+  const removeImage = () => {
+    setImage(null);
+    setImagePreview(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
     }
   };
 
@@ -49,6 +71,24 @@ export default function PostForm({ isOpen, onClose }: PostFormProps) {
             placeholder="What's on your mind?"
             className="w-full h-32 p-2 border rounded-md resize-none focus:outline-none focus:ring-2 focus:ring-indigo-500"
           />
+          {imagePreview && (
+            <div className="mt-4 relative">
+              <Image
+                src={imagePreview}
+                alt="Preview"
+                width={400}
+                height={300}
+                className="rounded-md object-cover w-full h-48"
+              />
+              <button
+                type="button"
+                onClick={removeImage}
+                className="absolute top-2 right-2 bg-red-500 text-white p-1 rounded-full hover:bg-red-600 transition-colors"
+              >
+                <Trash2 size={16} />
+              </button>
+            </div>
+          )}
           <div className="mt-4 flex items-center justify-between">
             <button
               type="button"
@@ -56,7 +96,7 @@ export default function PostForm({ isOpen, onClose }: PostFormProps) {
               className="flex items-center text-gray-600 hover:text-indigo-600"
             >
               <ImageIcon size={20} className="mr-2" />
-              Add Image
+              {image ? "Change Image" : "Add Image"}
             </button>
             <input
               type="file"
@@ -67,18 +107,12 @@ export default function PostForm({ isOpen, onClose }: PostFormProps) {
             />
             <button
               type="submit"
-              className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700"
+              className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition-colors"
+              disabled={!content.trim() && !image}
             >
               Post
             </button>
           </div>
-          {image && (
-            <div className="mt-4">
-              <p className="text-sm text-gray-600">
-                Selected image: {image.name}
-              </p>
-            </div>
-          )}
         </form>
       </div>
     </div>

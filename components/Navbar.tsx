@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
@@ -11,28 +11,63 @@ type NavbarProps = {
   onPostClick: () => void;
 };
 
+type User = {
+  name: string;
+  avatar: string | null;
+  email: string;
+  bio: string;
+  location: string;
+  website: string;
+  joinDate: string;
+  followers: number;
+  following: number;
+};
+
 export default function Navbar({ onPostClick }: NavbarProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
 
-  const currentUser = {
-    name: "Jane Doe",
-    avatar: "/a3.svg",
-    email: "jane.doe@example.com",
-    bio: "Passionate developer and tech enthusiast",
-    location: "San Francisco, CA",
-    website: "https://janedoe.com",
-    joinDate: "January 2021",
-    followers: 1234,
-    following: 567,
-  };
+  useEffect(() => {
+    const fetchUser = async () => {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        setIsLoading(false);
+        return;
+      }
+
+      try {
+        const response = await fetch("/api/user", {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        if (!response.ok) {
+          if (response.status === 401) {
+            localStorage.removeItem("token"); // Clear invalid token
+            router.push("/"); // Redirect to login
+          }
+          setIsLoading(false);
+          return;
+        }
+
+        const user: User = await response.json();
+        setCurrentUser(user);
+      } catch (error) {
+        console.error("Failed to fetch user:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchUser();
+  }, [router]);
 
   const handleLogout = () => {
-    // Clear the authentication token from localStorage
     localStorage.removeItem("token");
-
-    // Redirect to the login page
     router.push("/");
   };
 
@@ -64,28 +99,41 @@ export default function Navbar({ onPostClick }: NavbarProps) {
             >
               <PlusSquare className="inline-block mr-1" size={18} /> Post
             </button>
-            <button
-              onClick={() => setIsProfileOpen(true)}
-              className="ml-3 flex items-center"
-            >
-              <Image
-                src={currentUser.avatar}
-                alt={currentUser.name}
-                width={32}
-                height={32}
-                className="rounded-full"
-              />
-              <span className="ml-2 text-sm font-medium text-gray-700">
-                {currentUser.name}
-              </span>
-            </button>
-            <button
-              onClick={handleLogout}
-              className="ml-4 px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:text-red-500 flex items-center"
-            >
-              <LogOut size={18} className="mr-1" />
-              Logout
-            </button>
+            {isLoading ? (
+              <span className="ml-3 text-gray-500">Loading...</span>
+            ) : currentUser ? (
+              <>
+                <button
+                  onClick={() => setIsProfileOpen(true)}
+                  className="ml-3 flex items-center"
+                >
+                  <Image
+                    src={"/a1.svg"} // Default avatar
+                    alt={currentUser.name}
+                    width={32}
+                    height={32}
+                    className="rounded-full"
+                  />
+                  <span className="ml-2 text-sm font-medium text-gray-700">
+                    {currentUser.name}
+                  </span>
+                </button>
+                <button
+                  onClick={handleLogout}
+                  className="ml-4 px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:text-red-500 flex items-center"
+                >
+                  <LogOut size={18} className="mr-1" />
+                  Logout
+                </button>
+              </>
+            ) : (
+              <Link
+                href="/login"
+                className="ml-3 px-3 py-2 rounded-md text-sm font-medium text-indigo-600 hover:text-indigo-800"
+              >
+                Login
+              </Link>
+            )}
           </div>
           <div className="flex items-center sm:hidden">
             <button
@@ -123,22 +171,26 @@ export default function Navbar({ onPostClick }: NavbarProps) {
             >
               <PlusSquare className="inline-block mr-1" size={18} /> Post
             </button>
-            <button
-              onClick={handleLogout}
-              className="block w-full text-left px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-red-500 hover:bg-gray-50 flex items-center"
-            >
-              <LogOut size={18} className="mr-1" />
-              Logout
-            </button>
+            {currentUser && (
+              <button
+                onClick={handleLogout}
+                className="block w-full text-left px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-red-500 hover:bg-gray-50 flex items-center"
+              >
+                <LogOut size={18} className="mr-1" />
+                Logout
+              </button>
+            )}
           </div>
         </div>
       )}
 
-      <UserProfileDialog
-        isOpen={isProfileOpen}
-        onClose={() => setIsProfileOpen(false)}
-        user={currentUser}
-      />
+      {currentUser && (
+        <UserProfileDialog
+          isOpen={isProfileOpen}
+          onClose={() => setIsProfileOpen(false)}
+          user={currentUser}
+        />
+      )}
     </nav>
   );
 }

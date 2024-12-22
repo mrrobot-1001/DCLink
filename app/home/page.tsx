@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import withAuth from "@/hoc/withAuth"; // Import the HOC
 import Navbar from "@/components/Navbar";
 import ChatSection from "@/components/ChatSection";
 import ContentSection from "@/components/ContentSection";
@@ -9,7 +10,7 @@ import PostForm from "@/components/PostForm";
 import MobileChatButton from "@/components/MobileChatButton";
 import MobileConnectionButton from "@/components/MobileConnectionButton";
 
-export default function HomePage() {
+function HomePage() {
   const [isPostFormOpen, setIsPostFormOpen] = useState(false);
 
   return (
@@ -41,3 +42,5 @@ export default function HomePage() {
     </div>
   );
 }
+
+export default withAuth(HomePage); // Wrap the HomePage component with the withAuth HOC
