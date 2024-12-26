@@ -9,7 +9,7 @@ type ProfileDialogProps = {
   onClose: () => void;
   user: {
     id: number;
-    name: string;
+    username: string;
     avatar: string;
     bio: string;
     location: string;
@@ -20,11 +20,7 @@ type ProfileDialogProps = {
   };
 };
 
-export default function ProfileDialog({
-  isOpen,
-  onClose,
-  user,
-}: ProfileDialogProps) {
+export default function ProfileDialog({ isOpen, onClose, user }: ProfileDialogProps) {
   return (
     <AnimatePresence>
       {isOpen && (
@@ -38,64 +34,50 @@ export default function ProfileDialog({
             initial={{ scale: 0.9 }}
             animate={{ scale: 1 }}
             exit={{ scale: 0.9 }}
-            className="w-full max-w-md rounded-lg shadow-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 transition-colors duration-200"
+            className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 w-full max-w-md"
           >
-            <div className="relative p-6">
-              <button
-                onClick={onClose}
-                className="absolute top-4 right-4 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 transition-colors duration-200"
-              >
-                <X size={24} />
-              </button>
-              <div className="flex flex-col items-center">
-                <Image
-                  src={user.avatar}
-                  alt={user.name}
-                  width={100}
-                  height={100}
-                  className="rounded-full mb-4"
-                />
-                <h2 className="text-2xl font-bold mb-2">{user.name}</h2>
-                <p className="text-center mb-4 text-gray-600 dark:text-gray-400">
-                  {user.bio}
-                </p>
-                <div className="flex space-x-4 mb-4">
-                  <div className="text-center">
-                    <div className="font-bold">{user.followers}</div>
-                    <div className="text-sm text-gray-500 dark:text-gray-400">
-                      Followers
-                    </div>
-                  </div>
-                  <div className="text-center">
-                    <div className="font-bold">{user.following}</div>
-                    <div className="text-sm text-gray-500 dark:text-gray-400">
-                      Following
-                    </div>
-                  </div>
+            <button
+              onClick={onClose}
+              className="absolute top-4 right-4 text-gray-500 hover:text-gray-700"
+            >
+              <X size={24} />
+            </button>
+            <div className="flex flex-col items-center">
+              <Image
+                src={user.avatar || "/default-avatar.png"}
+                alt={user.username}
+                width={80}
+                height={80}
+                className="rounded-full"
+              />
+              <h2 className="text-2xl font-bold mt-4">{user.username}</h2>
+              <p className="text-gray-600 dark:text-gray-400">{user.bio}</p>
+              <div className="mt-4 flex items-center text-gray-600 dark:text-gray-400">
+                <MapPin size={16} className="mr-2" />
+                <span>{user.location}</span>
+              </div>
+              <div className="mt-2">
+                <a
+                  href={user.website}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-blue-500"
+                >
+                  {user.website || "No website available."}
+                </a>
+              </div>
+              <div className="mt-4 flex items-center text-gray-600 dark:text-gray-400">
+                <Calendar size={16} className="mr-2" />
+                <span>Joined {new Date(user.joinDate).toLocaleDateString()}</span>
+              </div>
+              <div className="mt-4 flex space-x-4">
+                <div className="text-center">
+                  <p className="text-lg font-semibold">{user.followers}</p>
+                  <p className="text-gray-600 dark:text-gray-400">Followers</p>
                 </div>
-                <div className="w-full space-y-2">
-                  <div className="flex items-center text-gray-600 dark:text-gray-400">
-                    <MapPin size={16} className="mr-2" />
-                    <span>{user.location}</span>
-                  </div>
-                  <div className="flex items-center">
-                    <LinkIcon
-                      size={16}
-                      className="mr-2 text-gray-600 dark:text-gray-400"
-                    />
-                    <a
-                      href={user.website}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-indigo-600 dark:text-indigo-400 hover:underline"
-                    >
-                      {user.website}
-                    </a>
-                  </div>
-                  <div className="flex items-center text-gray-600 dark:text-gray-400">
-                    <Calendar size={16} className="mr-2" />
-                    <span>Joined {user.joinDate}</span>
-                  </div>
+                <div className="text-center">
+                  <p className="text-lg font-semibold">{user.following}</p>
+                  <p className="text-gray-600 dark:text-gray-400">Following</p>
                 </div>
               </div>
             </div>

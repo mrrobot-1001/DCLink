@@ -1,50 +1,50 @@
 import { NextApiRequest, NextApiResponse } from "next";
-import { PrismaClient } from "@prisma/client";
+import { PrismaClient } from ".prisma/client";
+import { authenticate } from "../../utils/authenticate";
 
 const prisma = new PrismaClient();
 
-export default async function handler(
-  req: NextApiRequest,
-  res: NextApiResponse,
-) {
+export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method === "POST") {
-    const { followerId, followingId } = req.body;
-
-    if (!followerId || !followingId) {
-      return res
-        .status(400)
-        .json({ error: "Both followerId and followingId are required." });
+    const user = authenticate(req);
+    if (!user) {
+      return res.status(401).json({ error: "Unauthorized" });
     }
 
-    if (followerId === followingId) {
-      return res
-        .status(400)
-        .json({ error: "A user cannot follow themselves." });
+    const { followingId } = req.body;
+
+    if (!followingId) {
+      return res.status(400).json({ error: "Following ID is required." });
+    }
+
+    if (user.id === followingId) {
+      return res.status(400).json({ error: "A user cannot follow themselves." });
     }
 
     try {
       // Check if the follow relationship already exists
-      const existingFollow = await prisma.follower.findFirst({
-        where: { followerId, followingId },
+      const existingFollow = await prisma.follow.findFirst({
+        where: { followerId: user.id, followingId },
       });
 
       if (existingFollow) {
-        return res
-          .status(400)
-          .json({ error: "You are already following this user." });
+        return res.status(409).json({ error: "Already following this user." });
       }
 
       // Create the follow relationship
-      await prisma.follower.create({
-        data: { followerId, followingId },
+      const follow = await prisma.follow.create({
+        data: {
+          followerId: user.id,
+          followingId,
+        },
       });
 
-      res.status(200).json({ message: "Followed successfully." });
-    } catch (err) {
-      console.error("Error following user:", err);
-      res.status(500).json({ error: "Internal server error." });
+      return res.status(201).json(follow);
+    } catch (error) {
+      console.error("Error creating follow:", error);
+      return res.status(500).json({ error: "Internal Server Error" });
     }
   } else {
-    res.status(405).json({ error: "Method not allowed." });
+    return res.status(405).json({ error: "Method Not Allowed" });
   }
 }

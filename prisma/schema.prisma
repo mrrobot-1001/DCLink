@@ -8,24 +8,26 @@ datasource db {
 }
 
 model User {
-  id        Int        @id @default(autoincrement())
-  username  String     @unique
-  email     String     @unique
-  password  String
-  bio       String?
-  location  String?
-  website   String?
-  joinDate  DateTime   @default(now())
-  followers Follower[] @relation("UserFollowers")
-  following Follower[] @relation("UserFollowing")
+  id         Int        @id @default(autoincrement())
+  username   String     @unique
+  email      String     @unique
+  password   String
+  bio        String?
+  location   String?
+  website    String?
+  joinDate   DateTime   @default(now())
+  followers  Follow[]   @relation("FollowerRelation")
+  following  Follow[]   @relation("FollowingRelation")
 }
 
-model Follower {
+model Follow {
   id          Int      @id @default(autoincrement())
   followerId  Int
   followingId Int
   createdAt   DateTime @default(now())
 
-  follower  User @relation("UserFollowers", fields: [followerId], references: [id])
-  following User @relation("UserFollowing", fields: [followingId], references: [id])
+  follower    User @relation("FollowerRelation", fields: [followerId], references: [id])
+  following   User @relation("FollowingRelation", fields: [followingId], references: [id])
+
+  @@unique([followerId, followingId]) // Ensures a user can follow another only once
 }

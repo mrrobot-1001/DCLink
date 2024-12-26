@@ -26,7 +26,7 @@ const registerSchema = z
       .string()
       .max(100, "Location must be at most 100 characters")
       .optional(),
-    website: z.string().url("Invalid URL").optional(),
+    website: z.string().optional().nullable(),
   })
   .refine((data) => data.password === data.confirmPassword, {
     message: "Passwords don't match",
@@ -42,6 +42,7 @@ export default function RegisterForm() {
   const {
     register,
     handleSubmit,
+    reset, // Use reset to clear the form
     formState: { errors },
   } = useForm<RegisterFormData>({
     resolver: zodResolver(registerSchema),
@@ -73,6 +74,7 @@ export default function RegisterForm() {
       }
 
       toast.success("Registration successful!");
+      reset(); // Clear the form fields
     } catch (error: any) {
       toast.error(error.message || "Something went wrong");
     } finally {
@@ -106,6 +108,7 @@ export default function RegisterForm() {
         )}
       </motion.div>
 
+      {/* Remaining fields unchanged */}
       {/* Email Field */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
@@ -227,29 +230,30 @@ export default function RegisterForm() {
         )}
       </motion.div>
 
-      {/* Website Field */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, delay: 0.6 }}
-      >
-        <label
-          htmlFor="website"
-          className="block text-sm font-medium text-gray-700"
-        >
-          Website
-        </label>
-        <input
-          {...register("website")}
-          type="url"
-          id="website"
-          className="mt-1 text-black block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
-          placeholder="https://example.com"
-        />
-        {errors.website && (
-          <p className="mt-1 text-sm text-red-600">{errors.website.message}</p>
-        )}
-      </motion.div>
+   {/* Website Field */}
+<motion.div
+  initial={{ opacity: 0, y: 20 }}
+  animate={{ opacity: 1, y: 0 }}
+  transition={{ duration: 0.5, delay: 0.6 }}
+>
+  <label
+    htmlFor="website"
+    className="block text-sm font-medium text-gray-700"
+  >
+    Website (Optional)
+  </label>
+  <input
+    {...register("website", { required: false })} // Website is optional
+    type="url"
+    id="website"
+    className="mt-1 text-black block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+    placeholder="https://example.com (Optional)"
+  />
+  {errors.website && (
+    <p className="mt-1 text-sm text-red-600">{errors.website.message}</p>
+  )}
+</motion.div>
+
 
       {/* Submit Button */}
       <motion.button
