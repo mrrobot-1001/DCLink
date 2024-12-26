@@ -8,26 +8,26 @@ datasource db {
 }
 
 model User {
-  id         Int        @id @default(autoincrement())
-  username   String     @unique
-  email      String     @unique
-  password   String
-  bio        String?
-  location   String?
-  website    String?
-  joinDate   DateTime   @default(now())
-  followers  Follow[]   @relation("FollowerRelation")
-  following  Follow[]   @relation("FollowingRelation")
+  id           Int           @id @default(autoincrement())
+  username     String        @unique
+  email        String        @unique
+  password     String
+  bio          String?
+  location     String?
+  website      String?
+  joinDate     DateTime      @default(now())
+  connections  Connection[]  @relation("UserConnections")  // Connections initiated by this user
+  connectedBy  Connection[]  @relation("ConnectedByUser")  // Connections where this user is the target
 }
 
-model Follow {
+model Connection {
   id          Int      @id @default(autoincrement())
-  followerId  Int
-  followingId Int
+  userId      Int
+  connectedTo Int
   createdAt   DateTime @default(now())
 
-  follower    User @relation("FollowerRelation", fields: [followerId], references: [id])
-  following   User @relation("FollowingRelation", fields: [followingId], references: [id])
+  user        User @relation("UserConnections", fields: [userId], references: [id])
+  connected   User @relation("ConnectedByUser", fields: [connectedTo], references: [id])
 
-  @@unique([followerId, followingId]) // Ensures a user can follow another only once
+  @@unique([userId, connectedTo]) // Ensures unique connections
 }

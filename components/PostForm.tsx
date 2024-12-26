@@ -69,7 +69,7 @@ export default function PostForm({ isOpen, onClose }: PostFormProps) {
             value={content}
             onChange={(e) => setContent(e.target.value)}
             placeholder="What's on your mind?"
-            className="w-full h-32 p-2 border rounded-md resize-none focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            className="w-full h-32 p-2 border rounded-md resize-none focus:outline-none focus:ring-2 focus:ring-indigo-500 text-gray700"
           />
           {imagePreview && (
             <div className="mt-4 relative">

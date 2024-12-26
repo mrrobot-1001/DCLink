@@ -1,7 +1,7 @@
 "use client";
 
 import { motion, AnimatePresence } from "framer-motion";
-import { X, MapPin, LinkIcon, Calendar } from "lucide-react";
+import { X, MapPin, LinkIcon, Calendar } from 'lucide-react';
 import Image from "next/image";
 
 type ProfileDialogProps = {
@@ -10,13 +10,13 @@ type ProfileDialogProps = {
   user: {
     id: number;
     username: string;
-    avatar: string;
-    bio: string;
-    location: string;
-    website: string;
+    email: string;
+    bio?: string;
+    location?: string;
+    website?: string;
     joinDate: string;
-    followers: number;
-    following: number;
+    connections: { id: number }[];
+    avatar: string;
   };
 };
 
@@ -51,34 +51,33 @@ export default function ProfileDialog({ isOpen, onClose, user }: ProfileDialogPr
                 className="rounded-full"
               />
               <h2 className="text-2xl font-bold mt-4">{user.username}</h2>
-              <p className="text-gray-600 dark:text-gray-400">{user.bio}</p>
-              <div className="mt-4 flex items-center text-gray-600 dark:text-gray-400">
-                <MapPin size={16} className="mr-2" />
-                <span>{user.location}</span>
-              </div>
-              <div className="mt-2">
-                <a
-                  href={user.website}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-blue-500"
-                >
-                  {user.website || "No website available."}
-                </a>
-              </div>
+              <p className="text-gray-600 dark:text-gray-400">{user.bio || "No bio available"}</p>
+              {user.location && (
+                <div className="mt-4 flex items-center text-gray-600 dark:text-gray-400">
+                  <MapPin size={16} className="mr-2" />
+                  <span>{user.location}</span>
+                </div>
+              )}
+              {user.website && (
+                <div className="mt-2">
+                  <a
+                    href={user.website}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-blue-500 flex items-center"
+                  >
+                    <LinkIcon size={16} className="mr-2" />
+                    {user.website}
+                  </a>
+                </div>
+              )}
               <div className="mt-4 flex items-center text-gray-600 dark:text-gray-400">
                 <Calendar size={16} className="mr-2" />
                 <span>Joined {new Date(user.joinDate).toLocaleDateString()}</span>
               </div>
-              <div className="mt-4 flex space-x-4">
-                <div className="text-center">
-                  <p className="text-lg font-semibold">{user.followers}</p>
-                  <p className="text-gray-600 dark:text-gray-400">Followers</p>
-                </div>
-                <div className="text-center">
-                  <p className="text-lg font-semibold">{user.following}</p>
-                  <p className="text-gray-600 dark:text-gray-400">Following</p>
-                </div>
+              <div className="mt-4 text-center">
+                <p className="text-lg font-semibold">{user.connections.length}</p>
+                <p className="text-gray-600 dark:text-gray-400">Connections</p>
               </div>
             </div>
           </motion.div>
@@ -87,3 +86,4 @@ export default function ProfileDialog({ isOpen, onClose, user }: ProfileDialogPr
     </AnimatePresence>
   );
 }
+

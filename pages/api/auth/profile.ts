@@ -28,6 +28,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         location: true,
         website: true,
         joinDate: true,
+        connections: {
+          select: {
+            id: true,
+          },
+        },
       },
     });
 
@@ -35,10 +40,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return res.status(404).json({ error: "User not found" });
     }
 
-    // Return the user's profile details
-    return res.status(200).json(currentUser);
+    // Return the user's profile details including the number of connections
+    return res.status(200).json({
+      ...currentUser,
+      connectionCount: currentUser.connections.length,
+    });
   } catch (error) {
     console.error("Error fetching user profile:", error);
     return res.status(500).json({ error: "Internal Server Error" });
   }
 }
+

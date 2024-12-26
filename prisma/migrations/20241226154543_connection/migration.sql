@@ -15,18 +15,18 @@ CREATE TABLE `User` (
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- CreateTable
-CREATE TABLE `Follow` (
+CREATE TABLE `Connection` (
     `id` INTEGER NOT NULL AUTO_INCREMENT,
-    `followerId` INTEGER NOT NULL,
-    `followingId` INTEGER NOT NULL,
+    `userId` INTEGER NOT NULL,
+    `connectedTo` INTEGER NOT NULL,
     `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
 
-    UNIQUE INDEX `Follow_followerId_followingId_key`(`followerId`, `followingId`),
+    UNIQUE INDEX `Connection_userId_connectedTo_key`(`userId`, `connectedTo`),
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- AddForeignKey
-ALTER TABLE `Follow` ADD CONSTRAINT `Follow_followerId_fkey` FOREIGN KEY (`followerId`) REFERENCES `User`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE `Connection` ADD CONSTRAINT `Connection_userId_fkey` FOREIGN KEY (`userId`) REFERENCES `User`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE `Follow` ADD CONSTRAINT `Follow_followingId_fkey` FOREIGN KEY (`followingId`) REFERENCES `User`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE `Connection` ADD CONSTRAINT `Connection_connectedTo_fkey` FOREIGN KEY (`connectedTo`) REFERENCES `User`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
