@@ -15,9 +15,12 @@ type User = {
   location?: string;
   website?: string;
   joinDate: string;
+<<<<<<< HEAD
   followers?: { followerId: number }[]; // Followers relationship
   following?: { followingId: number }[]; // Following relationship
   isConnected: boolean; // Indicates whether the logged-in user is connected
+=======
+>>>>>>> 0447a8f3363544cfe7947480e0d1a8819e94e7c7
 };
 
 type UserProfileDialogProps = {

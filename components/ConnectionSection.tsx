@@ -13,9 +13,15 @@ type User = {
   followers?: { followerId: number }[]; // Followers relationship
   following?: { followingId: number }[]; // Following relationship
   isConnected: boolean; // Indicates whether the logged-in user is connected
+  followers?: { followerId: number }[]; // Followers relationship
+  following?: { followingId: number }[]; // Following relationship
+  isConnected: boolean; // Indicates whether the logged-in user is connected
 };
 
 export default function ConnectionSection() {
+  const [users, setUsers] = useState<User[]>([]);
+  const [loggedInUserId, setLoggedInUserId] = useState<number | null>(null);
+  const [searchTerm, setSearchTerm] = useState("");
   const [users, setUsers] = useState<User[]>([]);
   const [loggedInUserId, setLoggedInUserId] = useState<number | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
@@ -23,8 +29,10 @@ export default function ConnectionSection() {
   const [showConnected, setShowConnected] = useState(false);
 
   // Fetch the logged-in user's ID
+  // Fetch the logged-in user's ID
   const fetchLoggedInUserId = async () => {
     try {
+      const response = await fetch("/api/auth/profile", {
       const response = await fetch("/api/auth/profile", {
         method: "GET",
         headers: {
@@ -38,17 +46,22 @@ export default function ConnectionSection() {
 
       const data = await response.json();
       setLoggedInUserId(data.id); // Assuming the API returns the user's ID
+      setLoggedInUserId(data.id); // Assuming the API returns the user's ID
     } catch (error) {
       console.error("Error fetching logged-in user ID:", error);
     }
   };
 
   // Fetch all users
+  const fetchUsers = async () => {
+  // Fetch all users
   const fetchUsers = async (userId: number) => {
     try {
+      const response = await fetch("/api/users", {
       const response = await fetch("/api/auth/register", {
         method: "GET",
         headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
           Authorization: `Bearer ${localStorage.getItem("token")}`,
         },
       });
@@ -62,8 +75,11 @@ export default function ConnectionSection() {
         data.map((user) => ({
           ...user,
           isConnected: user.followers?.some(
+            (follower) => follower.followerId === loggedInUserId
+          isConnected: user.followers?.some(
             (follower) => follower.followerId === userId
           ),
+        }))
         }))
       );
     } catch (error) {
@@ -88,6 +104,7 @@ export default function ConnectionSection() {
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${localStorage.getItem("token")}`,
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
         },
         body: JSON.stringify({ followingId: userId }),
       });
@@ -98,6 +115,8 @@ export default function ConnectionSection() {
 
       setUsers((prevUsers) =>
         prevUsers.map((user) =>
+          user.id === userId ? { ...user, isConnected: true } : user
+        )
           user.id === userId ? { ...user, isConnected: true } : user
         )
       );
@@ -113,6 +132,7 @@ export default function ConnectionSection() {
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${localStorage.getItem("token")}`,
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
         },
         body: JSON.stringify({ followingId: userId }),
       });
@@ -125,6 +145,8 @@ export default function ConnectionSection() {
         prevUsers.map((user) =>
           user.id === userId ? { ...user, isConnected: false } : user
         )
+          user.id === userId ? { ...user, isConnected: false } : user
+        )
       );
     } catch (error) {
       console.error("Error unfollowing user:", error);
@@ -134,7 +156,9 @@ export default function ConnectionSection() {
   const filteredUsers = users.filter(
     (user) =>
       user.id !== loggedInUserId &&
+      user.id !== loggedInUserId &&
       (showConnected ? user.isConnected : true) &&
+      user.username.toLowerCase().includes(searchTerm.toLowerCase())
       user.username.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
@@ -181,6 +205,7 @@ export default function ConnectionSection() {
           >
             <div className="flex items-center">
               <Image
+                src="/a1.svg" // Replace with dynamic avatar if available
                 src="/a1.svg" // Replace with dynamic avatar if available
                 alt={user.username}
                 width={40}
