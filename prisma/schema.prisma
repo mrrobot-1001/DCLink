@@ -30,8 +30,4 @@ model Follow {
   following   User @relation("FollowingRelation", fields: [followingId], references: [id])
 
   @@unique([followerId, followingId]) // Ensures a user can follow another only once
-<<<<<<< HEAD
 }
-=======
-}
->>>>>>> 0447a8f3363544cfe7947480e0d1a8819e94e7c7

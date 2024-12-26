@@ -1,3 +1,4 @@
+// File: /pages/api/follow.ts
 import { NextApiRequest, NextApiResponse } from "next";
 import { PrismaClient } from ".prisma/client";
 import { authenticate } from "../../utils/authenticate";
@@ -5,46 +6,47 @@ import { authenticate } from "../../utils/authenticate";
 const prisma = new PrismaClient();
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  if (req.method === "POST") {
-    const user = authenticate(req);
-    if (!user) {
-      return res.status(401).json({ error: "Unauthorized" });
-    }
+  if (req.method !== "POST") {
+    return res.status(405).json({ error: "Method Not Allowed" });
+  }
 
-    const { followingId } = req.body;
+  const user = authenticate(req);
+  if (!user) {
+    return res.status(401).json({ error: "Unauthorized" });
+  }
 
-    if (!followingId) {
-      return res.status(400).json({ error: "Following ID is required." });
-    }
+  const { followingId } = req.body;
 
-    if (user.id === followingId) {
-      return res.status(400).json({ error: "A user cannot follow themselves." });
-    }
+  if (!followingId) {
+    return res.status(400).json({ error: "Following ID is required" });
+  }
 
-    try {
-      // Check if the follow relationship already exists
-      const existingFollow = await prisma.follow.findFirst({
-        where: { followerId: user.id, followingId },
-      });
-
-      if (existingFollow) {
-        return res.status(409).json({ error: "Already following this user." });
-      }
-
-      // Create the follow relationship
-      const follow = await prisma.follow.create({
-        data: {
+  try {
+    // Check if the relationship already exists
+    const existingFollow = await prisma.follow.findUnique({
+      where: {
+        followerId_followingId: {
           followerId: user.id,
           followingId,
         },
-      });
+      },
+    });
 
-      return res.status(201).json(follow);
-    } catch (error) {
-      console.error("Error creating follow:", error);
-      return res.status(500).json({ error: "Internal Server Error" });
+    if (existingFollow) {
+      return res.status(409).json({ error: "Already following this user" });
     }
-  } else {
-    return res.status(405).json({ error: "Method Not Allowed" });
+
+    // Create a new follow relationship
+    await prisma.follow.create({
+      data: {
+        followerId: user.id,
+        followingId,
+      },
+    });
+
+    return res.status(201).json({ message: "Followed successfully" });
+  } catch (error) {
+    console.error("Error creating follow relationship:", error);
+    return res.status(500).json({ error: "Internal Server Error" });
   }
 }
