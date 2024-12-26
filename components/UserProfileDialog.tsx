@@ -7,15 +7,12 @@ import { useState, useEffect } from "react";
 
 type User = {
   id: number;
-  name: string;
-  avatar: string;
+  username: string;
   email: string;
-  bio: string;
-  location: string;
-  website: string;
+  bio?: string;
+  location?: string;
+  website?: string;
   joinDate: string;
-  followers: number;
-  following: number;
 };
 
 type UserProfileDialogProps = {
@@ -45,7 +42,8 @@ export default function UserProfileDialog({
           return;
         }
 
-        const response = await fetch("/api/user", {
+        // Fetch user profile from /auth/profile endpoint
+        const response = await fetch("/api/auth/profile", {
           headers: {
             Authorization: `Bearer ${token}`,
           },
@@ -54,16 +52,16 @@ export default function UserProfileDialog({
         if (!response.ok) {
           const message = await response.text();
           throw new Error(
-            `Failed to fetch user details. Server responded with: ${message}`,
+            `Failed to fetch user details. Server responded with: ${message}`
           );
         }
 
-        const data = await response.json();
+        const data: User = await response.json();
         setUser(data);
       } catch (err) {
         console.error("Error fetching user details:", err);
         setError(
-          err instanceof Error ? err.message : "Unexpected error occurred.",
+          err instanceof Error ? err.message : "Unexpected error occurred."
         );
       } finally {
         setLoading(false);
@@ -160,30 +158,16 @@ export default function UserProfileDialog({
               </button>
               <div className="flex flex-col items-center">
                 <Image
-                  src={"/a1.svg"}
-                  alt={`${user.name}'s avatar`}
+                  src={"/a1.svg"} // Replace with dynamic avatar if available
+                  alt={`${user.username}'s avatar`}
                   width={100}
                   height={100}
                   className="rounded-full mb-4"
                 />
-                <h2 className="text-2xl font-bold mb-2">{user.name}</h2>
+                <h2 className="text-2xl font-bold mb-2">{user.username}</h2>
                 <p className="text-center mb-4 text-gray-600 dark:text-gray-400">
-                  {user.bio}
+                  {user.bio || "No bio available."}
                 </p>
-                <div className="flex space-x-4 mb-4">
-                  <div className="text-center">
-                    <div className="font-bold">{user.followers}</div>
-                    <div className="text-sm text-gray-500 dark:text-gray-400">
-                      Followers
-                    </div>
-                  </div>
-                  <div className="text-center">
-                    <div className="font-bold">{user.following}</div>
-                    <div className="text-sm text-gray-500 dark:text-gray-400">
-                      Following
-                    </div>
-                  </div>
-                </div>
                 <div className="w-full space-y-2">
                   <div className="flex items-center text-gray-600 dark:text-gray-400">
                     <Mail size={16} className="mr-2" />
@@ -191,7 +175,7 @@ export default function UserProfileDialog({
                   </div>
                   <div className="flex items-center text-gray-600 dark:text-gray-400">
                     <MapPin size={16} className="mr-2" />
-                    <span>{user.location}</span>
+                    <span>{user.location || "Location not provided."}</span>
                   </div>
                   <div className="flex items-center">
                     <LinkIcon
@@ -199,17 +183,17 @@ export default function UserProfileDialog({
                       className="mr-2 text-gray-600 dark:text-gray-400"
                     />
                     <a
-                      href={user.website}
+                      href={user.website || "#"}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="text-indigo-600 dark:text-indigo-400 hover:underline"
                     >
-                      {user.website}
+                      {user.website || "No website available."}
                     </a>
                   </div>
                   <div className="flex items-center text-gray-600 dark:text-gray-400">
                     <Calendar size={16} className="mr-2" />
-                    <span>Joined {user.joinDate}</span>
+                    <span>Joined {new Date(user.joinDate).toLocaleDateString()}</span>
                   </div>
                 </div>
               </div>

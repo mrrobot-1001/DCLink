@@ -39,7 +39,7 @@ export default function Navbar({ onPostClick }: NavbarProps) {
       }
 
       try {
-        const response = await fetch("/api/user", {
+        const response = await fetch("/api/auth/profile", {
           headers: {
             Authorization: `Bearer ${token}`,
           },
