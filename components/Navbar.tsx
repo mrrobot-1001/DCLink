@@ -4,7 +4,8 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { Menu, X, PlusSquare, LogOut } from "lucide-react";
+import { Menu, X, PlusSquare, LogOut } from 'lucide-react';
+import { motion } from 'framer-motion';
 import UserProfileDialog from "./UserProfileDialog";
 
 type NavbarProps = {
@@ -47,8 +48,8 @@ export default function Navbar({ onPostClick }: NavbarProps) {
 
         if (!response.ok) {
           if (response.status === 401) {
-            localStorage.removeItem("token"); // Clear invalid token
-            router.push("/"); // Redirect to login
+            localStorage.removeItem("token");
+            router.push("/");
           }
           setIsLoading(false);
           return;
@@ -71,6 +72,10 @@ export default function Navbar({ onPostClick }: NavbarProps) {
     router.push("/");
   };
 
+  const handleProfileClick = () => {
+    router.push("/profile");
+  };
+
   return (
     <nav className="bg-white shadow-md fixed top-0 left-0 right-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -82,20 +87,26 @@ export default function Navbar({ onPostClick }: NavbarProps) {
           </div>
           <div className="hidden sm:ml-6 sm:flex sm:items-center">
             <Link
+              href="/"
+              className="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-100"
+            >
+              Home
+            </Link>
+            <Link
               href="/about"
-              className="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:text-gray-900"
+              className="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-100"
             >
               About
             </Link>
             <Link
               href="/feedback"
-              className="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:text-gray-900"
+              className="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-100"
             >
               Feedback
             </Link>
             <button
               onClick={onPostClick}
-              className="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:text-gray-900"
+              className="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-100"
             >
               <PlusSquare className="inline-block mr-1" size={18} /> Post
             </button>
@@ -103,12 +114,14 @@ export default function Navbar({ onPostClick }: NavbarProps) {
               <span className="ml-3 text-gray-500">Loading...</span>
             ) : currentUser ? (
               <>
-                <button
-                  onClick={() => setIsProfileOpen(true)}
+                <motion.button
+                  onClick={handleProfileClick}
                   className="ml-3 flex items-center"
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
                 >
                   <Image
-                    src={"/a1.svg"} // Default avatar
+                    src={currentUser.avatar || "/a1.svg"}
                     alt={currentUser.name}
                     width={32}
                     height={32}
@@ -117,7 +130,7 @@ export default function Navbar({ onPostClick }: NavbarProps) {
                   <span className="ml-2 text-sm font-medium text-gray-700">
                     {currentUser.name}
                   </span>
-                </button>
+                </motion.button>
                 <button
                   onClick={handleLogout}
                   className="ml-4 px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:text-red-500 flex items-center"
@@ -154,6 +167,12 @@ export default function Navbar({ onPostClick }: NavbarProps) {
         <div className="sm:hidden">
           <div className="pt-2 pb-3 space-y-1">
             <Link
+              href="/"
+              className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-50"
+            >
+              Home
+            </Link>
+            <Link
               href="/about"
               className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-50"
             >
@@ -172,13 +191,21 @@ export default function Navbar({ onPostClick }: NavbarProps) {
               <PlusSquare className="inline-block mr-1" size={18} /> Post
             </button>
             {currentUser && (
-              <button
-                onClick={handleLogout}
-                className="block w-full text-left px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-red-500 hover:bg-gray-50 flex items-center"
-              >
-                <LogOut size={18} className="mr-1" />
-                Logout
-              </button>
+              <>
+                <button
+                  onClick={handleProfileClick}
+                  className="block w-full text-left px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-50"
+                >
+                  Profile
+                </button>
+                <button
+                  onClick={handleLogout}
+                  className="block w-full text-left px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-red-500 hover:bg-gray-50 flex items-center"
+                >
+                  <LogOut size={18} className="mr-1" />
+                  Logout
+                </button>
+              </>
             )}
           </div>
         </div>
@@ -194,3 +221,4 @@ export default function Navbar({ onPostClick }: NavbarProps) {
     </nav>
   );
 }
+

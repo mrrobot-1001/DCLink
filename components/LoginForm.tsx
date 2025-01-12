@@ -7,6 +7,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import toast from "react-hot-toast";
 import { motion } from "framer-motion";
+import { Loader2 } from 'lucide-react';
 
 const loginSchema = z.object({
   email: z.string().email("Invalid email address"),
@@ -30,6 +31,9 @@ export default function LoginForm() {
     setIsLoading(true);
 
     try {
+      // Prefetch the home page
+      router.prefetch('/home');
+
       const response = await fetch("/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -38,18 +42,19 @@ export default function LoginForm() {
 
       if (!response.ok) {
         const errorData = await response.json();
-        toast.error(errorData.message || "Login failed");
-        setIsLoading(false);
-        return;
+        throw new Error(errorData.message || "Login failed");
       }
 
       const { token } = await response.json();
-      localStorage.setItem("token", token); // Save the JWT to localStorage
+      localStorage.setItem("token", token);
+      
+      // Use replace instead of push for a smoother transition
+      router.replace('/home');
+      
       toast.success("Login successful!");
-      router.push("/home"); // Redirect to home page after successful login
     } catch (error) {
       console.error("Login error:", error);
-      toast.error("An unexpected error occurred");
+      toast.error(error instanceof Error ? error.message : "An unexpected error occurred");
     } finally {
       setIsLoading(false);
     }
@@ -74,6 +79,7 @@ export default function LoginForm() {
           id="email"
           className="mt-1 text-black block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50   transition-all duration-300 "
           placeholder="you@example.com"
+          disabled={isLoading}
         />
         {errors.email && (
           <p className="mt-1 text-sm text-red-600 dark:text-red-400">
@@ -98,6 +104,7 @@ export default function LoginForm() {
           id="password"
           className="mt-1 text-black block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50  transition-all duration-300 "
           placeholder="••••••••"
+          disabled={isLoading}
         />
         {errors.password && (
           <p className="mt-1 text-sm text-red-600 dark:text-red-400">
@@ -115,8 +122,16 @@ export default function LoginForm() {
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}
       >
-        {isLoading ? "Logging in..." : "Log in"}
+        {isLoading ? (
+          <span className="flex items-center justify-center">
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            Logging in...
+          </span>
+        ) : (
+          "Log in"
+        )}
       </motion.button>
     </form>
   );
 }
+
