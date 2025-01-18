@@ -27,6 +27,12 @@ const registerSchema = z
       .max(100, "Location must be at most 100 characters")
       .optional(),
     website: z.string().optional().nullable(),
+    instagramProfile: z.string().optional().nullable(),
+    githubProfile: z.string().optional().nullable(),
+    linkedinProfile: z.string().optional().nullable(),
+    skills: z.string().max(500, "Skills must be at most 500 characters").optional(),
+    currentlyWorkingAt: z.string().max(100, "Current work must be at most 100 characters").optional(),
+    pastWorkedAt: z.string().max(200, "Past work must be at most 200 characters").optional(),
   })
   .refine((data) => data.password === data.confirmPassword, {
     message: "Passwords don't match",
@@ -65,6 +71,12 @@ export default function RegisterForm() {
           bio: data.bio || null,
           location: data.location || null,
           website: data.website || null,
+          instagramProfile: data.instagramProfile || null,
+          githubProfile: data.githubProfile || null,
+          linkedinProfile: data.linkedinProfile || null,
+          skills: data.skills || null,
+          currentlyWorkingAt: data.currentlyWorkingAt || null,
+          pastWorkedAt: data.pastWorkedAt || null,
         }),
       });
 
@@ -108,7 +120,6 @@ export default function RegisterForm() {
         )}
       </motion.div>
 
-      {/* Remaining fields unchanged */}
       {/* Email Field */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
@@ -230,30 +241,183 @@ export default function RegisterForm() {
         )}
       </motion.div>
 
-   {/* Website Field */}
-<motion.div
-  initial={{ opacity: 0, y: 20 }}
-  animate={{ opacity: 1, y: 0 }}
-  transition={{ duration: 0.5, delay: 0.6 }}
->
-  <label
-    htmlFor="website"
-    className="block text-sm font-medium text-gray-700"
-  >
-    Website (Optional)
-  </label>
-  <input
-    {...register("website", { required: false })} // Website is optional
-    type="url"
-    id="website"
-    className="mt-1 text-black block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
-    placeholder="https://example.com (Optional)"
-  />
-  {errors.website && (
-    <p className="mt-1 text-sm text-red-600">{errors.website.message}</p>
-  )}
-</motion.div>
+      {/* Website Field */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay: 0.6 }}
+      >
+        <label
+          htmlFor="website"
+          className="block text-sm font-medium text-gray-700"
+        >
+          Website (Optional)
+        </label>
+        <input
+          {...register("website", { required: false })} // Website is optional
+          type="url"
+          id="website"
+          className="mt-1 text-black block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+          placeholder="https://example.com (Optional)"
+        />
+        {errors.website && (
+          <p className="mt-1 text-sm text-red-600">{errors.website.message}</p>
+        )}
+      </motion.div>
 
+      {/* Instagram Profile Field */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay: 0.7 }}
+      >
+        <label
+          htmlFor="instagramProfile"
+          className="block text-sm font-medium text-gray-700"
+        >
+          Instagram Profile (Optional)
+        </label>
+        <input
+          {...register("instagramProfile")}
+          type="url"
+          id="instagramProfile"
+          className="mt-1 text-black block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+          placeholder="https://www.instagram.com/username"
+        />
+        {errors.instagramProfile && (
+          <p className="mt-1 text-sm text-red-600">
+            {errors.instagramProfile.message}
+          </p>
+        )}
+      </motion.div>
+
+      {/* GitHub Profile Field */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay: 0.8 }}
+      >
+        <label
+          htmlFor="githubProfile"
+          className="block text-sm font-medium text-gray-700"
+        >
+          GitHub Profile (Optional)
+        </label>
+        <input
+          {...register("githubProfile")}
+          type="url"
+          id="githubProfile"
+          className="mt-1 text-black block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+          placeholder="https://github.com/username"
+        />
+        {errors.githubProfile && (
+          <p className="mt-1 text-sm text-red-600">
+            {errors.githubProfile.message}
+          </p>
+        )}
+      </motion.div>
+
+      {/* LinkedIn Profile Field */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay: 0.9 }}
+      >
+        <label
+          htmlFor="linkedinProfile"
+          className="block text-sm font-medium text-gray-700"
+        >
+          LinkedIn Profile (Optional)
+        </label>
+        <input
+          {...register("linkedinProfile")}
+          type="url"
+          id="linkedinProfile"
+          className="mt-1 text-black block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+          placeholder="https://www.linkedin.com/in/username"
+        />
+        {errors.linkedinProfile && (
+          <p className="mt-1 text-sm text-red-600">
+            {errors.linkedinProfile.message}
+          </p>
+        )}
+      </motion.div>
+
+      {/* Skills Field */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay: 1.0 }}
+      >
+        <label
+          htmlFor="skills"
+          className="block text-sm font-medium text-gray-700"
+        >
+          Skills (Optional)
+        </label>
+        <textarea
+          {...register("skills")}
+          id="skills"
+          className="mt-1 text-black block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+          placeholder="List your skills, separated by commas"
+        ></textarea>
+        {errors.skills && (
+          <p className="mt-1 text-sm text-red-600">
+            {errors.skills.message}
+          </p>
+        )}
+      </motion.div>
+
+      {/* Currently Working At Field */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay: 1.1 }}
+      >
+        <label
+          htmlFor="currentlyWorkingAt"
+          className="block text-sm font-medium text-gray-700"
+        >
+          Currently Working At (Optional)
+        </label>
+        <input
+          {...register("currentlyWorkingAt")}
+          type="text"
+          id="currentlyWorkingAt"
+          className="mt-1 text-black block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+          placeholder="Current Company or Position"
+        />
+        {errors.currentlyWorkingAt && (
+          <p className="mt-1 text-sm text-red-600">
+            {errors.currentlyWorkingAt.message}
+          </p>
+        )}
+      </motion.div>
+
+      {/* Past Worked At Field */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay: 1.2 }}
+      >
+        <label
+          htmlFor="pastWorkedAt"
+          className="block text-sm font-medium text-gray-700"
+        >
+          Past Work Experience (Optional)
+        </label>
+        <textarea
+          {...register("pastWorkedAt")}
+          id="pastWorkedAt"
+          className="mt-1 text-black block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+          placeholder="List your past work experiences"
+        ></textarea>
+        {errors.pastWorkedAt && (
+          <p className="mt-1 text-sm text-red-600">
+            {errors.pastWorkedAt.message}
+          </p>
+        )}
+      </motion.div>
 
       {/* Submit Button */}
       <motion.button
@@ -269,3 +433,4 @@ export default function RegisterForm() {
     </form>
   );
 }
+

@@ -8,16 +8,23 @@ datasource db {
 }
 
 model User {
-  id           Int           @id @default(autoincrement())
-  username     String        @unique
-  email        String        @unique
-  password     String
-  bio          String?
-  location     String?
-  website      String?
-  joinDate     DateTime      @default(now())
-  connections  Connection[]  @relation("UserConnections")  // Connections initiated by this user
-  connectedBy  Connection[]  @relation("ConnectedByUser")  // Connections where this user is the target
+  id                 Int           @id @default(autoincrement())
+  username           String        @unique
+  email              String        @unique
+  password           String
+  bio                String?
+  location           String?
+  website            String?
+  instagramProfile   String?
+  githubProfile      String?
+  linkedinProfile    String?
+  skills             String?
+  currentlyWorkingAt String?
+  pastWorkedAt       String?
+  joinDate           DateTime      @default(now())
+  connections        Connection[]  @relation("UserConnections")
+  connectedBy        Connection[]  @relation("ConnectedByUser")
+   messages     Message[]
 }
 
 model Connection {
@@ -28,6 +35,18 @@ model Connection {
 
   user        User @relation("UserConnections", fields: [userId], references: [id])
   connected   User @relation("ConnectedByUser", fields: [connectedTo], references: [id])
+    messages    Message[]
 
   @@unique([userId, connectedTo]) // Ensures unique connections
+}
+
+model Message {
+  id            Int        @id @default(autoincrement())
+  content       String
+  senderId      Int
+  connectionId  Int
+  createdAt     DateTime   @default(now())
+
+  sender        User       @relation(fields: [senderId], references: [id])
+  connection    Connection @relation(fields: [connectionId], references: [id])
 }

@@ -3,13 +3,20 @@
 import { useState, useEffect } from "react";
 import Image from "next/image";
 import ChatDialog from "./ChatDialog";
-import { MessageSquare } from "lucide-react";
+import { MessageSquare, Trash2 } from 'lucide-react';
+import io from 'socket.io-client';
+
+type User = {
+  id: number;
+  username: string;
+  avatar: string;
+};
 
 type Chat = {
   id: number;
-  name: string;
-  avatar: string;
+  users: User[];
   lastMessage: string;
+  unreadCount: number;
 };
 
 export default function ChatSection() {
@@ -17,47 +24,149 @@ export default function ChatSection() {
   const [chats, setChats] = useState<Chat[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
-  const [token, setToken] = useState<string | null>(null);
+  const [loggedInUserId, setLoggedInUserId] = useState<number | null>(null);
+  const [socket, setSocket] = useState<any>(null);
 
-  // Fetch the token from localStorage on component mount
   useEffect(() => {
-    const storedToken = localStorage.getItem("token");
-    setToken(storedToken);
+    const newSocket = io('http://localhost:3000');
+    setSocket(newSocket);
+
+    return () => {
+      newSocket.disconnect();
+    };
   }, []);
 
-  // Fetch chats whenever the token changes
   useEffect(() => {
-    if (!token) return; // Wait until the token is available
-
-    const fetchChats = async () => {
-      setLoading(true);
-      setError(null);
-
+    const fetchLoggedInUserId = async () => {
       try {
-        const response = await fetch("/api/chats", {
+        const token = localStorage.getItem("token");
+        if (!token) {
+          throw new Error("No authentication token found");
+        }
+
+        const response = await fetch("/api/auth/profile", {
           headers: {
             Authorization: `Bearer ${token}`,
           },
         });
 
         if (!response.ok) {
-          throw new Error("Failed to fetch chats.");
+          throw new Error("Failed to fetch user profile");
         }
 
-        const data: Chat[] = await response.json();
-        setChats(data);
-      } catch (err) {
-        console.error("Error fetching chats:", err);
-        setError(
-          err instanceof Error ? err.message : "Unexpected error occurred."
-        );
-      } finally {
-        setLoading(false);
+        const data = await response.json();
+        setLoggedInUserId(data.id);
+      } catch (error) {
+        console.error("Error fetching logged-in user ID:", error);
+        setError("Failed to fetch user profile. Please try again.");
       }
     };
 
-    fetchChats();
-  }, [token]); // Re-run when the token changes
+    fetchLoggedInUserId();
+  }, []);
+
+  const fetchChats = async () => {
+    if (!loggedInUserId) return;
+
+    setLoading(true);
+    setError(null);
+
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        throw new Error("No authentication token found");
+      }
+
+      const response = await fetch("/api/chats", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(`Failed to fetch chats: ${errorData.error}`);
+      }
+
+      const data: Chat[] = await response.json();
+      console.log('Fetched chats:', data);
+      setChats(data);
+    } catch (err) {
+      console.error("Error fetching chats:", err);
+      setError(
+        err instanceof Error ? err.message : "Unexpected error occurred."
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (loggedInUserId) {
+      fetchChats();
+    }
+  }, [loggedInUserId]);
+
+  useEffect(() => {
+    if (socket) {
+      socket.on('chat updated', (updatedChat: Chat) => {
+        setChats(prevChats => 
+          prevChats.map(chat => 
+            chat.id === updatedChat.id ? updatedChat : chat
+          )
+        );
+      });
+
+      socket.on('chat deleted', (deletedChatId: number) => {
+        setChats(prevChats => prevChats.filter(chat => chat.id !== deletedChatId));
+      });
+
+      socket.on('new connection', () => {
+        fetchChats();
+      });
+    }
+
+    return () => {
+      if (socket) {
+        socket.off('chat updated');
+        socket.off('chat deleted');
+        socket.off('new connection');
+      }
+    };
+  }, [socket]);
+
+  const handleChatUpdate = (updatedChat: Chat) => {
+    setChats(prevChats =>
+      prevChats.map(chat =>
+        chat.id === updatedChat.id ? updatedChat : chat
+      )
+    );
+  };
+
+  const handleDeleteChat = async (chatId: number) => {
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        throw new Error("No authentication token found");
+      }
+
+      const response = await fetch(`/api/chats/${chatId}`, {
+        method: 'DELETE',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to delete chat");
+      }
+
+      setChats(prevChats => prevChats.filter(chat => chat.id !== chatId));
+    } catch (error) {
+      console.error("Error deleting chat:", error);
+      setError("Failed to delete chat. Please try again.");
+    }
+  };
 
   if (loading) {
     return (
@@ -80,46 +189,68 @@ export default function ChatSection() {
       <div className="p-4 border-b">
         <h2 className="text-lg text-black font-semibold">Chats</h2>
       </div>
-      {chats.length > 0 ? (
+      {chats.length > 0 && loggedInUserId ? (
         <div className="divide-y max-h-[calc(100vh-200px)] overflow-y-auto">
-          {chats.map((chat) => (
-            <div
-              key={chat.id}
-              className="p-4 hover:bg-gray-50 cursor-pointer transition duration-150 ease-in-out"
-              onClick={() => setSelectedChat(chat.id)}
-            >
-              <div className="flex items-center">
-                <Image
-                  src={chat.avatar}
-                  alt={chat.name}
-                  width={40}
-                  height={40}
-                  className="rounded-full"
-                />
-                <div className="ml-3">
-                  <p className="text-sm font-medium text-gray-900">
-                    {chat.name}
-                  </p>
-                  <p className="text-sm text-gray-500">{chat.lastMessage}</p>
+          {chats.map((chat) => {
+            const otherUser = chat.users.find(user => user.id !== loggedInUserId);
+            if (!otherUser) return null;
+
+            return (
+              <div
+                key={chat.id}
+                className="p-4 hover:bg-gray-50 cursor-pointer transition duration-150 ease-in-out flex justify-between items-center"
+              >
+                <div
+                  className="flex items-center flex-grow"
+                  onClick={() => setSelectedChat(chat.id)}
+                >
+                  <Image
+                    src={otherUser.avatar || "/a1.svg"}
+                    alt={otherUser.username}
+                    width={40}
+                    height={40}
+                    className="rounded-full"
+                  />
+                  <div className="ml-3">
+                    <p className="text-sm font-medium text-gray-900">
+                      {otherUser.username}
+                    </p>
+                    <p className="text-sm text-gray-500">{chat.lastMessage || "No messages yet"}</p>
+                  </div>
+                  {chat.unreadCount > 0 && (
+                    <span className="ml-auto bg-blue-500 text-white text-xs font-bold rounded-full px-2 py-1">
+                      {chat.unreadCount}
+                    </span>
+                  )}
                 </div>
+                <button
+                  onClick={() => handleDeleteChat(chat.id)}
+                  className="ml-2 text-red-500 hover:text-red-700"
+                >
+                  <Trash2 size={20} />
+                </button>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       ) : (
         <div className="p-4 text-center text-gray-500">
           <MessageSquare size={48} className="mx-auto mb-2 text-gray-400" />
-          <p>No connected chats available.</p>
+          <p>No chats with connected users.</p>
           <p className="text-sm">Connect with people to start chatting!</p>
         </div>
       )}
-      {selectedChat && (
+      {selectedChat && loggedInUserId && (
         <ChatDialog
           isOpen={true}
           onClose={() => setSelectedChat(null)}
           chat={chats.find((chat) => chat.id === selectedChat)!}
+          loggedInUserId={loggedInUserId}
+          onChatUpdate={handleChatUpdate}
+          socket={socket}
         />
       )}
     </div>
   );
 }
+

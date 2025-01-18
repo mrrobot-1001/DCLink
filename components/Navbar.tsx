@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { Menu, X, PlusSquare, LogOut } from 'lucide-react';
+import { Menu, X, PlusSquare, LogOut, BarChart2 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import UserProfileDialog from "./UserProfileDialog";
 
@@ -76,6 +76,15 @@ export default function Navbar({ onPostClick }: NavbarProps) {
     router.push("/profile");
   };
 
+  const handleDashboardClick = () => {
+    const password = prompt("Enter the dashboard password:");
+    if (password === "DC@)@$") {
+      router.push("/dashboard");
+    } else {
+      alert("Incorrect password");
+    }
+  };
+
   return (
     <nav className="bg-white shadow-md fixed top-0 left-0 right-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -109,6 +118,12 @@ export default function Navbar({ onPostClick }: NavbarProps) {
               className="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-100"
             >
               <PlusSquare className="inline-block mr-1" size={18} /> Post
+            </button>
+            <button
+              onClick={handleDashboardClick}
+              className="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-100"
+            >
+              <BarChart2 className="inline-block mr-1" size={18} /> Dashboard
             </button>
             {isLoading ? (
               <span className="ml-3 text-gray-500">Loading...</span>
@@ -189,6 +204,12 @@ export default function Navbar({ onPostClick }: NavbarProps) {
               className="block w-full text-left px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-50"
             >
               <PlusSquare className="inline-block mr-1" size={18} /> Post
+            </button>
+            <button
+              onClick={handleDashboardClick}
+              className="block w-full text-left px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-50"
+            >
+              <BarChart2 className="inline-block mr-1" size={18} /> Dashboard
             </button>
             {currentUser && (
               <>

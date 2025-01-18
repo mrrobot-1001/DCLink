@@ -1,159 +1,143 @@
-"use client";
+'use client'
 
-import { useState, useEffect } from "react";
-import Image from "next/image";
-import { Search, Users, UserCheck } from 'lucide-react';
-import ProfileDialog from "./ProfileDialog";
-
-type User = {
-  id: number;
-  username: string;
-  email: string;
-  bio?: string;
-  location?: string;
-  website?: string;
-  isConnected: boolean;
-};
+import { useState, useEffect } from "react"
+import Image from "next/image"
+import { Search, Users, UserCheck } from 'lucide-react'
+import ProfileDialog from "./ProfileDialog"
+import useSocket from "../hooks/useSocket"
+import { User } from "../types/user"
 
 export default function ConnectionSection() {
-  const [users, setUsers] = useState<User[]>([]);
-  const [loggedInUserId, setLoggedInUserId] = useState<number | null>(null);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [selectedUser, setSelectedUser] = useState<User | null>(null);
-  const [showConnected, setShowConnected] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  // Fetch the logged-in user's ID
-  const fetchLoggedInUserId = async () => {
-    try {
-      const timestamp = new Date().getTime();
-      const response = await fetch(`/api/auth/profile?t=${timestamp}`, {
-        method: "GET",
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-          "Cache-Control": "no-cache, no-store, must-revalidate",
-          Pragma: "no-cache",
-          Expires: "0",
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to fetch logged-in user ID");
-      }
-
-      const data = await response.json();
-      setLoggedInUserId(data.id);
-    } catch (error) {
-      console.error("Error fetching logged-in user ID:", error);
-      setError("Failed to fetch user profile. Please try again.");
-    }
-  };
-
-  // Fetch all users
-  const fetchUsers = async () => {
-    try {
-      const timestamp = new Date().getTime();
-      const response = await fetch(`/api/users?t=${timestamp}`, {
-        method: "GET",
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-          "Cache-Control": "no-cache, no-store, must-revalidate",
-          Pragma: "no-cache",
-          Expires: "0",
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to fetch users");
-      }
-
-      const data: User[] = await response.json();
-      setUsers(data);
-    } catch (error) {
-      console.error("Error fetching users:", error);
-      setError("Failed to fetch users. Please try again.");
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  const [users, setUsers] = useState<User[]>([])
+  const [loggedInUser, setLoggedInUser] = useState<User | null>(null)
+  const [searchTerm, setSearchTerm] = useState("")
+  const [selectedUser, setSelectedUser] = useState<User | null>(null)
+  const [showConnected, setShowConnected] = useState(false)
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const { isConnected, emit, on, off } = useSocket()
 
   useEffect(() => {
-    fetchLoggedInUserId();
-  }, []);
-
-  useEffect(() => {
-    if (loggedInUserId !== null) {
-      fetchUsers();
+    const fetchLoggedInUser = async () => {
+      try {
+        const response = await fetch('/api/auth/profile', {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        })
+        if (!response.ok) throw new Error("Failed to fetch profile")
+        const data = await response.json()
+        setLoggedInUser(data)
+        if (isConnected) {
+          emit('join-user', data.id)
+        }
+      } catch (error) {
+        console.error("Error fetching profile:", error)
+        setError("Failed to fetch user profile")
+      }
     }
-  }, [loggedInUserId]);
+
+    const fetchUsers = async () => {
+      try {
+        const response = await fetch('/api/users', {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        })
+        if (!response.ok) throw new Error("Failed to fetch users")
+        const data: User[] = await response.json()
+        setUsers(data)
+      } catch (error) {
+        console.error("Error fetching users:", error)
+        setError("Failed to fetch users")
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    fetchLoggedInUser()
+    fetchUsers()
+
+    on('connection-established', ({ connection, chat }) => {
+      setUsers(prevUsers =>
+        prevUsers.map(user =>
+          user.id === connection.connectedTo ? { ...user, isConnected: true } : user
+        )
+      )
+      // Notify ChatSection about the new chat
+      emit('new-chat', chat)
+    })
+
+    on('connection-removed', ({ connection }) => {
+      setUsers(prevUsers =>
+        prevUsers.map(user =>
+          user.id === connection.connectedTo ? { ...user, isConnected: false } : user
+        )
+      )
+    })
+
+    return () => {
+      off('connection-established')
+      off('connection-removed')
+    }
+  }, [emit, on, off, isConnected])
 
   const handleConnect = async (userId: number) => {
+    if (!loggedInUser) return
     try {
-      const response = await fetch("/api/connection/add", {
-        method: "POST",
+      const response = await fetch('/api/connections/connect', {
+        method: 'POST',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
           Authorization: `Bearer ${localStorage.getItem("token")}`,
         },
-        body: JSON.stringify({ connectedTo: userId }),
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to connect to user");
-      }
-
-      setUsers((prevUsers) =>
-        prevUsers.map((user) =>
-          user.id === userId ? { ...user, isConnected: true } : user
-        )
-      );
+        body: JSON.stringify({ userId }),
+      })
+      if (!response.ok) throw new Error("Failed to connect")
+      const data = await response.json()
+      emit('new-connection', { connection: data.connection, chat: data.chat })
     } catch (error) {
-      console.error("Error connecting to user:", error);
-      setError("Failed to connect to user. Please try again.");
+      console.error("Error connecting:", error)
+      setError("Failed to connect")
     }
-  };
+  }
 
   const handleDisconnect = async (userId: number) => {
+    if (!loggedInUser) return
     try {
-      const response = await fetch("/api/connection/remove", {
-        method: "DELETE",
+      const response = await fetch('/api/connections/disconnect', {
+        method: 'POST',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
           Authorization: `Bearer ${localStorage.getItem("token")}`,
         },
-        body: JSON.stringify({ connectedTo: userId }),
-      });
-
+        body: JSON.stringify({ userId }),
+      })
       if (!response.ok) {
-        throw new Error("Failed to disconnect from user");
+        const errorData = await response.json()
+        throw new Error(errorData.error || "Failed to disconnect")
       }
-
-      setUsers((prevUsers) =>
-        prevUsers.map((user) =>
+      emit('remove-connection', { userId: loggedInUser.id, connectedTo: userId })
+      setUsers(prevUsers =>
+        prevUsers.map(user =>
           user.id === userId ? { ...user, isConnected: false } : user
         )
-      );
+      )
     } catch (error) {
-      console.error("Error disconnecting from user:", error);
-      setError("Failed to disconnect from user. Please try again.");
+      console.error("Error disconnecting:", error)
+      setError(error instanceof Error ? error.message : "Failed to disconnect")
     }
-  };
+  }
 
   const filteredUsers = users.filter(
     (user) =>
-      user.id !== loggedInUserId &&
+      user.id !== loggedInUser?.id &&
       (showConnected ? user.isConnected : true) &&
       user.username.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  )
 
-  if (isLoading) {
-    return <div className="p-4 text-center">Loading...</div>;
-  }
-
-  if (error) {
-    return <div className="p-4 text-center text-red-500">{error}</div>;
-  }
+  if (isLoading) return <div className="p-4 text-center">Loading...</div>
+  if (error) return <div className="p-4 text-center text-red-500">{error}</div>
 
   return (
     <div className="bg-white rounded-lg shadow-md overflow-hidden">
@@ -168,16 +152,11 @@ export default function ConnectionSection() {
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
-            <Search
-              className="absolute left-3 top-2.5 text-gray-400"
-              size={20}
-            />
+            <Search className="absolute left-3 top-2.5 text-gray-400" size={20} />
           </div>
           <button
             className={`ml-2 px-4 py-2 rounded-lg flex items-center ${
-              showConnected
-                ? "bg-indigo-600 text-white"
-                : "bg-gray-200 text-gray-700"
+              showConnected ? "bg-indigo-600 text-white" : "bg-gray-200 text-gray-700"
             }`}
             onClick={() => setShowConnected(!showConnected)}
           >
@@ -200,7 +179,7 @@ export default function ConnectionSection() {
             >
               <div className="flex items-center">
                 <Image
-                  src="/a1.svg"
+                  src={user.avatar || "/default-avatar.png"}
                   alt={user.username}
                   width={40}
                   height={40}
@@ -214,27 +193,21 @@ export default function ConnectionSection() {
                     {user.bio || "No bio available"}
                   </p>
                 </div>
-                {user.isConnected ? (
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleDisconnect(user.id);
-                    }}
-                    className="px-2 py-1 bg-red-100 text-red-800 text-xs font-medium rounded-full"
-                  >
-                    Disconnect
-                  </button>
-                ) : (
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleConnect(user.id);
-                    }}
-                    className="px-2 py-1 bg-green-100 text-green-800 text-xs font-medium rounded-full"
-                  >
-                    Connect
-                  </button>
-                )}
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    user.isConnected 
+                      ? handleDisconnect(user.id)
+                      : handleConnect(user.id)
+                  }}
+                  className={`px-2 py-1 text-xs font-medium rounded-full ${
+                    user.isConnected
+                      ? "bg-red-100 text-red-800"
+                      : "bg-green-100 text-green-800"
+                  }`}
+                >
+                  {user.isConnected ? "Disconnect" : "Connect"}
+                </button>
               </div>
             </div>
           ))
@@ -252,6 +225,6 @@ export default function ConnectionSection() {
         />
       )}
     </div>
-  );
+  )
 }
 

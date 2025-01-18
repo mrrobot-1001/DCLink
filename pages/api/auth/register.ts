@@ -9,7 +9,7 @@ export default async function handler(
   res: NextApiResponse,
 ) {
   if (req.method === "POST") {
-    const { username, email, password, bio, location, website } = req.body;
+    const { username, email, password, bio, location, website, instagramProfile, githubProfile, linkedinProfile, skills, currentlyWorkingAt, pastWorkedAt } = req.body;
 
     // Validate required fields
     if (!username || !email || !password) {
@@ -25,6 +25,12 @@ export default async function handler(
         bio,
         location,
         website,
+        instagramProfile,
+        githubProfile,
+        linkedinProfile,
+        skills,
+        currentlyWorkingAt,
+        pastWorkedAt,
       });
 
       // Check if username or email already exists
@@ -49,10 +55,16 @@ export default async function handler(
           username,
           email,
           password: hashedPassword,
-          bio: bio || null, // Default to null if not provided
-          location: location || null, // Default to null if not provided
-          website: website || null, // Default to null if not provided
-          joinDate: new Date(), // Automatically set current timestamp
+          bio: bio || null,
+          location: location || null,
+          website: website || null,
+          instagramProfile: instagramProfile || null,
+          githubProfile: githubProfile || null,
+          linkedinProfile: linkedinProfile || null,
+          skills: skills || null,
+          currentlyWorkingAt: currentlyWorkingAt || null,
+          pastWorkedAt: pastWorkedAt || null,
+          joinDate: new Date(),
         },
       });
 
@@ -69,6 +81,12 @@ export default async function handler(
           bio: newUser.bio,
           location: newUser.location,
           website: newUser.website,
+          instagramProfile: newUser.instagramProfile,
+          githubProfile: newUser.githubProfile,
+          linkedinProfile: newUser.linkedinProfile,
+          skills: newUser.skills,
+          currentlyWorkingAt: newUser.currentlyWorkingAt,
+          pastWorkedAt: newUser.pastWorkedAt,
           joinDate: newUser.joinDate,
         },
       });
@@ -106,3 +124,4 @@ export default async function handler(
     return res.status(405).json({ message: "Method not allowed" });
   }
 }
+
