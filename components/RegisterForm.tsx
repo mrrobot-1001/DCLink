@@ -31,6 +31,7 @@ const registerSchema = z
     currentlyWorkingAt: z.string().max(100, "Current work must be at most 100 characters").optional(),
     pastWorkedAt: z.string().max(200, "Past work must be at most 200 characters").optional(),
     session: z.string().optional(),
+    jcode: z.string().min(1, "Joining code is required"),
   })
   .refine((data) => data.password === data.confirmPassword, {
     message: "Passwords don't match",
@@ -42,6 +43,7 @@ type RegisterFormData = z.infer<typeof registerSchema>
 export default function RegisterForm() {
   const [isLoading, setIsLoading] = useState(false)
   const [sessionOptions, setSessionOptions] = useState<string[]>([])
+  const [isCodeValid, setIsCodeValid] = useState(false)
 
   useEffect(() => {
     const currentYear = new Date().getFullYear()
@@ -58,9 +60,21 @@ export default function RegisterForm() {
     handleSubmit,
     reset, // Use reset to clear the form
     formState: { errors },
+    watch,
   } = useForm<RegisterFormData>({
     resolver: zodResolver(registerSchema),
   })
+
+  // Watch the joining code field
+  const jcode = watch("jcode")
+
+  useEffect(() => {
+    if (jcode === "DCSES2024") {
+      setIsCodeValid(true)
+    } else {
+      setIsCodeValid(false)
+    }
+  }, [jcode])
 
   // Form submission handler
   const onSubmit = async (data: RegisterFormData) => {
@@ -346,7 +360,7 @@ export default function RegisterForm() {
         <select
           {...register("session")}
           id="session"
-          className="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+          className="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm text-gray-700"
         >
           <option value="">Select a session</option>
           {sessionOptions.map((option) => (
@@ -358,10 +372,29 @@ export default function RegisterForm() {
         {errors.session && <p className="mt-1 text-sm text-red-600">{errors.session.message}</p>}
       </motion.div>
 
+      {/* Joining Code Field */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay: 1.4 }}
+      >
+        <label htmlFor="jcode" className="block text-sm font-medium text-gray-700">
+          Joining Code
+        </label>
+        <input
+          {...register("jcode")}
+          type="text"
+          id="jcode"
+          className="mt-1 text-black block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+          placeholder="Enter joining code"
+        />
+        {errors.jcode && <p className="mt-1 text-sm text-red-600">{errors.jcode.message}</p>}
+      </motion.div>
+
       {/* Submit Button */}
       <motion.button
         type="submit"
-        disabled={isLoading}
+        disabled={isLoading || !isCodeValid}
         className="w-full py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50"
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -372,4 +405,3 @@ export default function RegisterForm() {
     </form>
   )
 }
-
