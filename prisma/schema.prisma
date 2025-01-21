@@ -22,6 +22,7 @@ model User {
   currentlyWorkingAt String?
   pastWorkedAt       String?
   joinDate           DateTime      @default(now())
+  session            String?
   connections        Connection[]  @relation("UserConnections")
   connectedBy        Connection[]  @relation("ConnectedByUser")
    messages     Message[]
@@ -50,3 +51,4 @@ model Message {
   sender        User       @relation(fields: [senderId], references: [id])
   connection    Connection @relation(fields: [connectionId], references: [id])
 }
+

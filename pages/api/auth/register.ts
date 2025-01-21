@@ -1,19 +1,30 @@
-import { NextApiRequest, NextApiResponse } from "next";
-import { PrismaClient } from ".prisma/client";
-import bcrypt from "bcrypt";
+import type { NextApiRequest, NextApiResponse } from "next"
+import { PrismaClient } from ".prisma/client"
+import bcrypt from "bcrypt"
 
-const prisma = new PrismaClient();
+const prisma = new PrismaClient()
 
-export default async function handler(
-  req: NextApiRequest,
-  res: NextApiResponse,
-) {
+export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method === "POST") {
-    const { username, email, password, bio, location, website, instagramProfile, githubProfile, linkedinProfile, skills, currentlyWorkingAt, pastWorkedAt } = req.body;
+    const {
+      username,
+      email,
+      password,
+      bio,
+      location,
+      website,
+      instagramProfile,
+      githubProfile,
+      linkedinProfile,
+      skills,
+      currentlyWorkingAt,
+      pastWorkedAt,
+      session,
+    } = req.body
 
     // Validate required fields
     if (!username || !email || !password) {
-      return res.status(400).json({ message: "Missing required fields" });
+      return res.status(400).json({ message: "Missing required fields" })
     }
 
     try {
@@ -31,23 +42,24 @@ export default async function handler(
         skills,
         currentlyWorkingAt,
         pastWorkedAt,
-      });
+        session,
+      })
 
       // Check if username or email already exists
       const existingUser = await prisma.user.findFirst({
         where: {
           OR: [{ username }, { email }],
         },
-      });
+      })
 
       if (existingUser) {
         return res.status(409).json({
           message: "Email or username already in use",
-        });
+        })
       }
 
       // Hash the password
-      const hashedPassword = await bcrypt.hash(password, 10);
+      const hashedPassword = await bcrypt.hash(password, 10)
 
       // Create the user
       const newUser = await prisma.user.create({
@@ -65,11 +77,12 @@ export default async function handler(
           currentlyWorkingAt: currentlyWorkingAt || null,
           pastWorkedAt: pastWorkedAt || null,
           joinDate: new Date(),
+          session: session || null,
         },
-      });
+      })
 
       // Log the newly created user
-      console.log("User registered successfully:", newUser);
+      console.log("User registered successfully:", newUser)
 
       // Respond with success
       return res.status(201).json({
@@ -88,40 +101,39 @@ export default async function handler(
           currentlyWorkingAt: newUser.currentlyWorkingAt,
           pastWorkedAt: newUser.pastWorkedAt,
           joinDate: newUser.joinDate,
+          session: newUser.session,
         },
-      });
+      })
     } catch (error) {
-      console.error("Error during registration:", error);
+      console.error("Error during registration:", error)
 
       // Handle known Prisma errors
       if (error instanceof Error && "code" in error && error.code === "P2002") {
-        return res
-          .status(409)
-          .json({ message: "Email or username already in use" });
+        return res.status(409).json({ message: "Email or username already in use" })
       }
 
       // Return generic error for unknown issues
       return res.status(500).json({
         message: "Internal server error",
         error: error instanceof Error ? error.message : "Unknown error",
-      });
+      })
     }
   } else if (req.method === "GET") {
     try {
       // Fetch all users from the database
-      const users = await prisma.user.findMany();
+      const users = await prisma.user.findMany()
 
       // Respond with the list of users
-      return res.status(200).json(users);
+      return res.status(200).json(users)
     } catch (error) {
-      console.error("Error fetching users:", error);
+      console.error("Error fetching users:", error)
       return res.status(500).json({
         message: "Internal server error",
         error: error instanceof Error ? error.message : "Unknown error",
-      });
+      })
     }
   } else {
-    return res.status(405).json({ message: "Method not allowed" });
+    return res.status(405).json({ message: "Method not allowed" })
   }
 }
 
