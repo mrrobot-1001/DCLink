@@ -23,6 +23,7 @@ model User {
   pastWorkedAt       String?
   joinDate           DateTime      @default(now())
   session            String?
+  isAdmin            Boolean       @default(false)
   connections        Connection[]  @relation("UserConnections")
   connectedBy        Connection[]  @relation("ConnectedByUser")
    messages     Message[]

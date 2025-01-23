@@ -1,42 +1,43 @@
-"use client";
+"use client"
 
-import { useState, useEffect } from "react";
-import Link from "next/link";
-import Image from "next/image";
-import { useRouter } from "next/navigation";
-import { Menu, X, PlusSquare, LogOut, BarChart2 } from 'lucide-react';
-import { motion } from 'framer-motion';
-import UserProfileDialog from "./UserProfileDialog";
+import { useState, useEffect } from "react"
+import Link from "next/link"
+import Image from "next/image"
+import { useRouter } from "next/navigation"
+import { Menu, X, PlusSquare, LogOut, BarChart2 } from "lucide-react"
+import { motion } from "framer-motion"
+import UserProfileDialog from "./UserProfileDialog"
+import Logo from "next/image"
 
 type NavbarProps = {
-  onPostClick: () => void;
-};
+  onPostClick: () => void
+}
 
 type User = {
-  name: string;
-  avatar: string | null;
-  email: string;
-  bio: string;
-  location: string;
-  website: string;
-  joinDate: string;
-  followers: number;
-  following: number;
-};
+  name: string
+  avatar: string | null
+  email: string
+  bio: string
+  location: string
+  website: string
+  joinDate: string
+  followers: number
+  following: number
+}
 
 export default function Navbar({ onPostClick }: NavbarProps) {
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [isProfileOpen, setIsProfileOpen] = useState(false);
-  const [currentUser, setCurrentUser] = useState<User | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const router = useRouter();
+  const [isMenuOpen, setIsMenuOpen] = useState(false)
+  const [isProfileOpen, setIsProfileOpen] = useState(false)
+  const [currentUser, setCurrentUser] = useState<User | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
+  const router = useRouter()
 
   useEffect(() => {
     const fetchUser = async () => {
-      const token = localStorage.getItem("token");
+      const token = localStorage.getItem("token")
       if (!token) {
-        setIsLoading(false);
-        return;
+        setIsLoading(false)
+        return
       }
 
       try {
@@ -44,46 +45,46 @@ export default function Navbar({ onPostClick }: NavbarProps) {
           headers: {
             Authorization: `Bearer ${token}`,
           },
-        });
+        })
 
         if (!response.ok) {
           if (response.status === 401) {
-            localStorage.removeItem("token");
-            router.push("/");
+            localStorage.removeItem("token")
+            router.push("/")
           }
-          setIsLoading(false);
-          return;
+          setIsLoading(false)
+          return
         }
 
-        const user: User = await response.json();
-        setCurrentUser(user);
+        const user: User = await response.json()
+        setCurrentUser(user)
       } catch (error) {
-        console.error("Failed to fetch user:", error);
+        console.error("Failed to fetch user:", error)
       } finally {
-        setIsLoading(false);
+        setIsLoading(false)
       }
-    };
+    }
 
-    fetchUser();
-  }, [router]);
+    fetchUser()
+  }, [router])
 
   const handleLogout = () => {
-    localStorage.removeItem("token");
-    router.push("/");
-  };
+    localStorage.removeItem("token")
+    router.push("/")
+  }
 
   const handleProfileClick = () => {
-    router.push("/profile");
-  };
+    router.push("/profile")
+  }
 
   const handleDashboardClick = () => {
-    const password = prompt("Enter the dashboard password:");
+    const password = prompt("Enter the dashboard password:")
     if (password === "DC@)@$") {
-      router.push("/dashboard");
+      router.push("/dashboard")
     } else {
-      alert("Incorrect password");
+      alert("Incorrect password")
     }
-  };
+  }
 
   return (
     <nav className="bg-white shadow-md fixed top-0 left-0 right-0 z-50">
@@ -91,16 +92,18 @@ export default function Navbar({ onPostClick }: NavbarProps) {
         <div className="flex justify-between h-16">
           <div className="flex">
             <Link href="/" className="flex-shrink-0 flex items-center">
+              <Logo src="/images/linkimg.jpg" alt="DCLink Logo" width={60} height={80} className="mr-2" />
               <span className="text-2xl font-bold text-indigo-600">DCLink</span>
             </Link>
           </div>
           <div className="hidden sm:ml-6 sm:flex sm:items-center">
-            <Link
-              href="/"
+          <Link
+              href="/gallery"
               className="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-100"
             >
-              Home
+              Gallery
             </Link>
+           
             <Link
               href="/about"
               className="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-100"
@@ -115,7 +118,7 @@ export default function Navbar({ onPostClick }: NavbarProps) {
             </Link>
             <button
               onClick={onPostClick}
-              className="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-100"
+              className="px-3 py-2 rounded-md text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 transition-colors duration-200 flex items-center"
             >
               <PlusSquare className="inline-block mr-1" size={18} /> Post
             </button>
@@ -131,7 +134,7 @@ export default function Navbar({ onPostClick }: NavbarProps) {
               <>
                 <motion.button
                   onClick={handleProfileClick}
-                  className="ml-3 flex items-center"
+                  className="ml-3 flex items-center bg-indigo-100 rounded-full p-1 hover:bg-indigo-200 transition-colors duration-200"
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                 >
@@ -142,9 +145,7 @@ export default function Navbar({ onPostClick }: NavbarProps) {
                     height={32}
                     className="rounded-full"
                   />
-                  <span className="ml-2 text-sm font-medium text-gray-700">
-                    {currentUser.name}
-                  </span>
+                  <span className="ml-2 text-sm font-medium text-indigo-800 mr-2">{currentUser.name}</span>
                 </motion.button>
                 <button
                   onClick={handleLogout}
@@ -201,7 +202,7 @@ export default function Navbar({ onPostClick }: NavbarProps) {
             </Link>
             <button
               onClick={onPostClick}
-              className="block w-full text-left px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-50"
+              className="block w-full text-left px-3 py-2 rounded-md text-base font-medium text-white bg-indigo-600 hover:bg-indigo-700 transition-colors duration-200 flex items-center"
             >
               <PlusSquare className="inline-block mr-1" size={18} /> Post
             </button>
@@ -233,13 +234,9 @@ export default function Navbar({ onPostClick }: NavbarProps) {
       )}
 
       {currentUser && (
-        <UserProfileDialog
-          isOpen={isProfileOpen}
-          onClose={() => setIsProfileOpen(false)}
-          user={currentUser}
-        />
+        <UserProfileDialog isOpen={isProfileOpen} onClose={() => setIsProfileOpen(false)} user={currentUser} />
       )}
     </nav>
-  );
+  )
 }
 

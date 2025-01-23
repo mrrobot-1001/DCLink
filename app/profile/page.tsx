@@ -35,6 +35,7 @@ type User = {
   joinDate: string
   connections: { id: number }[]
   session?: string
+  isAdmin: boolean
 }
 
 export default function UserProfilePage() {
@@ -92,7 +93,7 @@ export default function UserProfilePage() {
         return
       }
 
-      const response = await fetch("/api/auth/profile", {
+      const response = await fetch("/api/auth/update-profile", {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -141,36 +142,45 @@ export default function UserProfilePage() {
       transition={{ duration: 0.3 }}
       className="min-h-screen bg-gray-100 py-12 px-4 sm:px-6 lg:px-8"
     >
-      <div className="max-w-3xl mx-auto bg-white shadow-xl rounded-lg overflow-hidden">
-        <div className="px-4 py-5 sm:px-6 bg-indigo-600 flex justify-between items-center">
-          <h3 className="text-lg leading-6 font-medium text-white">User Profile</h3>
+      <div className="max-w-4xl mx-auto bg-white shadow-2xl rounded-lg overflow-hidden">
+        <div className="px-4 py-5 sm:px-6 bg-gradient-to-r from-indigo-600 to-purple-600 flex justify-between items-center">
+          <h3 className="text-2xl leading-6 font-semibold text-white">User Profile</h3>
           {!isEditing && (
-            <button onClick={handleEdit} className="flex items-center text-white hover:text-indigo-200">
-              <Edit className="h-5 w-5 mr-1" />
-              Edit
+            <button
+              onClick={handleEdit}
+              className="flex items-center text-white bg-indigo-500 hover:bg-indigo-600 px-4 py-2 rounded-md transition duration-300 ease-in-out"
+            >
+              <Edit className="h-5 w-5 mr-2" />
+              Edit Profile
             </button>
           )}
         </div>
         <div className="px-4 py-5 sm:p-6">
-          <div className="flex flex-col items-center">
+          <div className="flex flex-col items-center mb-8">
             <Image
               src="/a1.svg"
               alt={`${user.username}'s avatar`}
-              width={100}
-              height={100}
-              className="rounded-full mb-4"
+              width={120}
+              height={120}
+              className="rounded-full mb-4 border-4 border-indigo-200"
             />
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">{user.username}</h2>
+            <h2 className="text-3xl font-bold text-gray-900 mb-2">{user.username}</h2>
             {isEditing ? (
               <textarea
                 name="bio"
                 value={editedUser.bio || ""}
                 onChange={handleChange}
-                className="w-full p-2 border rounded"
+                className="w-full p-2 border rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
                 placeholder="Enter your bio"
+                rows={3}
               />
             ) : (
-              <p className="text-center mb-4 text-gray-600">{user.bio || "No bio available."}</p>
+              <p className="text-center mb-4 text-gray-600 max-w-lg">{user.bio || "No bio available."}</p>
+            )}
+            {user.isAdmin && (
+              <span className="bg-yellow-100 text-yellow-800 text-xs font-medium mr-2 px-2.5 py-0.5 rounded-full">
+                Admin
+              </span>
             )}
           </div>
           <div className="mt-5 border-t border-gray-200">
@@ -187,19 +197,20 @@ export default function UserProfilePage() {
                 { icon: Briefcase, label: "Past Work Experience", field: "pastWorkedAt" },
                 { icon: Calendar, label: "Session", field: "session" },
               ].map(({ icon: Icon, label, field }) => (
-                <div key={field} className="py-4 sm:py-5 sm:grid sm:grid-cols-3 sm:gap-4">
+                <div key={field} className="py-4 sm:py-5 sm:grid sm:grid-cols-3 sm:gap-4 items-center">
                   <dt className="text-sm font-medium text-gray-500 flex items-center">
-                    <Icon className="mr-2 h-5 w-5 text-gray-400" />
+                    <Icon className="mr-2 h-5 w-5 text-indigo-500" />
                     {label}
                   </dt>
                   <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
                     {isEditing ? (
-                      field === "skills" || field === "pastWorkedAt" || field === "session" ? (
+                      field === "skills" || field === "pastWorkedAt" ? (
                         <textarea
                           name={field}
                           value={editedUser[field as keyof User] || ""}
                           onChange={handleChange}
-                          className="w-full p-2 border rounded"
+                          className="w-full p-2 border rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                          rows={3}
                         />
                       ) : (
                         <input
@@ -207,29 +218,35 @@ export default function UserProfilePage() {
                           name={field}
                           value={editedUser[field as keyof User] || ""}
                           onChange={handleChange}
-                          className="w-full p-2 border rounded"
+                          className="w-full p-2 border rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
                         />
                       )
                     ) : (
-                      user[field as keyof User] || "Not specified"
+                      <span className="bg-gray-100 px-3 py-2 rounded-md">
+                        {user[field as keyof User] || "Not specified"}
+                      </span>
                     )}
                   </dd>
                 </div>
               ))}
-              <div className="py-4 sm:py-5 sm:grid sm:grid-cols-3 sm:gap-4">
+              <div className="py-4 sm:py-5 sm:grid sm:grid-cols-3 sm:gap-4 items-center">
                 <dt className="text-sm font-medium text-gray-500 flex items-center">
-                  <Users className="mr-2 h-5 w-5 text-gray-400" />
+                  <Users className="mr-2 h-5 w-5 text-indigo-500" />
                   Connections
                 </dt>
-                <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">{user.connections.length}</dd>
+                <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
+                  <span className="bg-indigo-100 text-indigo-800 px-3 py-2 rounded-md">{user.connections.length}</span>
+                </dd>
               </div>
-              <div className="py-4 sm:py-5 sm:grid sm:grid-cols-3 sm:gap-4">
+              <div className="py-4 sm:py-5 sm:grid sm:grid-cols-3 sm:gap-4 items-center">
                 <dt className="text-sm font-medium text-gray-500 flex items-center">
-                  <Calendar className="mr-2 h-5 w-5 text-gray-400" />
+                  <Calendar className="mr-2 h-5 w-5 text-indigo-500" />
                   Joined
                 </dt>
                 <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
-                  {new Date(user.joinDate).toLocaleDateString()}
+                  <span className="bg-green-100 text-green-800 px-3 py-2 rounded-md">
+                    {new Date(user.joinDate).toLocaleDateString()}
+                  </span>
                 </dd>
               </div>
             </dl>
@@ -238,13 +255,13 @@ export default function UserProfilePage() {
             <div className="mt-6 flex justify-end space-x-4">
               <button
                 onClick={handleCancel}
-                className="py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                className="py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition duration-300 ease-in-out"
               >
                 Cancel
               </button>
               <button
                 onClick={handleSave}
-                className="py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                className="py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition duration-300 ease-in-out"
               >
                 Save Changes
               </button>

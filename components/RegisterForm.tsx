@@ -32,6 +32,8 @@ const registerSchema = z
     pastWorkedAt: z.string().max(200, "Past work must be at most 200 characters").optional(),
     session: z.string().optional(),
     jcode: z.string().min(1, "Joining code is required"),
+    isAdmin: z.boolean().optional(),
+    adminCode: z.string().optional(),
   })
   .refine((data) => data.password === data.confirmPassword, {
     message: "Passwords don't match",
@@ -81,6 +83,10 @@ export default function RegisterForm() {
     setIsLoading(true)
 
     try {
+      if (data.isAdmin && data.adminCode !== "admin123") {
+        throw new Error("Invalid admin code")
+      }
+
       const response = await fetch("/api/auth/register", {
         method: "POST",
         headers: {
@@ -89,6 +95,7 @@ export default function RegisterForm() {
         body: JSON.stringify({
           ...data,
           session: data.session || null,
+          isAdmin: data.isAdmin || false,
         }),
       })
 
@@ -391,6 +398,39 @@ export default function RegisterForm() {
         {errors.jcode && <p className="mt-1 text-sm text-red-600">{errors.jcode.message}</p>}
       </motion.div>
 
+      {/* Is Admin Checkbox */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay: 1.5 }}
+      >
+        <label htmlFor="isAdmin" className="flex items-center">
+          <input {...register("isAdmin")} type="checkbox" id="isAdmin" className="mr-2" />
+          <span className="text-sm font-medium text-gray-700">Register as Admin</span>
+        </label>
+      </motion.div>
+
+      {/* Admin Code Field */}
+      {watch("isAdmin") && (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 1.6 }}
+        >
+          <label htmlFor="adminCode" className="block text-sm font-medium text-gray-700">
+            Admin Code
+          </label>
+          <input
+            {...register("adminCode")}
+            type="password"
+            id="adminCode"
+            className="mt-1 text-black block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+            placeholder="Enter admin code"
+          />
+          {errors.adminCode && <p className="mt-1 text-sm text-red-600">{errors.adminCode.message}</p>}
+        </motion.div>
+      )}
+
       {/* Submit Button */}
       <motion.button
         type="submit"
@@ -405,3 +445,4 @@ export default function RegisterForm() {
     </form>
   )
 }
+

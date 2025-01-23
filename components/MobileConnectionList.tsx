@@ -1,43 +1,52 @@
-"use client";
+"use client"
 
-import { useState } from "react";
-import Image from "next/image";
-import { X } from "lucide-react";
-import ProfileDialog from "./ProfileDialog";
+import { useState, useEffect } from "react"
+import Image from "next/image"
+import { X } from "lucide-react"
+import ProfileDialog from "./ProfileDialog"
+
+type User = {
+  id: number
+  username: string
+  avatar: string
+  role: string
+}
 
 type MobileConnectionListProps = {
-  isOpen: boolean;
-  onClose: () => void;
-};
+  isOpen: boolean
+  onClose: () => void
+}
 
-export default function MobileConnectionList({
-  isOpen,
-  onClose,
-}: MobileConnectionListProps) {
-  const [selectedUser, setSelectedUser] = useState<number | null>(null);
+export default function MobileConnectionList({ isOpen, onClose }: MobileConnectionListProps) {
+  const [selectedUser, setSelectedUser] = useState<number | null>(null)
+  const [connections, setConnections] = useState<User[]>([])
 
-  const connections = [
-    {
-      id: 1,
-      name: "Alice Johnson",
-      avatar: "/placeholder.svg?height=50&width=50",
-      role: "UX Designer",
-    },
-    {
-      id: 2,
-      name: "Bob Williams",
-      avatar: "/placeholder.svg?height=50&width=50",
-      role: "Frontend Developer",
-    },
-    {
-      id: 3,
-      name: "Carol Brown",
-      avatar: "/placeholder.svg?height=50&width=50",
-      role: "Data Scientist",
-    },
-  ];
+  useEffect(() => {
+    const fetchConnections = async () => {
+      try {
+        const response = await fetch("/api/connections", {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        })
 
-  if (!isOpen) return null;
+        if (!response.ok) {
+          throw new Error("Failed to fetch connections")
+        }
+
+        const data = await response.json()
+        setConnections(data)
+      } catch (error) {
+        console.error("Error fetching connections:", error)
+      }
+    }
+
+    if (isOpen) {
+      fetchConnections()
+    }
+  }, [isOpen])
+
+  if (!isOpen) return null
 
   return (
     <div className="fixed inset-0 bg-white z-50 overflow-hidden flex flex-col">
@@ -56,16 +65,14 @@ export default function MobileConnectionList({
           >
             <div className="flex items-center">
               <Image
-                src={connection.avatar}
-                alt={connection.name}
+                src={connection.avatar || "/placeholder.svg?height=50&width=50"}
+                alt={connection.username}
                 width={40}
                 height={40}
                 className="rounded-full"
               />
               <div className="ml-3">
-                <p className="text-sm font-medium text-gray-900">
-                  {connection.name}
-                </p>
+                <p className="text-sm font-medium text-gray-900">{connection.username}</p>
                 <p className="text-sm text-gray-500">{connection.role}</p>
               </div>
             </div>
@@ -80,5 +87,6 @@ export default function MobileConnectionList({
         />
       )}
     </div>
-  );
+  )
 }
+

@@ -1,50 +1,51 @@
-"use client";
+"use client"
 
-import { motion } from "framer-motion";
-import { Heart, MessageCircle, Share2, MoreHorizontal, Plus, Youtube } from 'lucide-react';
-import Image from "next/image";
-import { useState } from "react";
+import { motion } from "framer-motion"
+import { Heart, MessageCircle, Share2, MoreHorizontal } from "lucide-react"
+import Image from "next/image"
+import { useState, useEffect } from "react"
+
+const YOUTUBE_API_KEY = "YOUR_YOUTUBE_API_KEY"
 
 export default function ContentSection() {
   const [highlights, setHighlights] = useState([
     {
       id: 1,
-      title: "Teacher's and freshers day",
-      image: "/images/dclogo.png",
-      youtubeLink: "https://www.youtube.com/watch?v=BYvXl5F5YTQ",
+      youtubeLink: "https://www.youtube.com/embed/BYvXl5F5YTQ",
+      videoId: "BYvXl5F5YTQ",
+      title: "",
     },
     {
       id: 2,
-      title: "Induction (CS)",
-      image: "/images/dclogo.png",
-      youtubeLink: "https://www.youtube.com/watch?v=ny-bWDLGA9o",
+      youtubeLink: "https://www.youtube.com/embed/ny-bWDLGA9o",
+      videoId: "ny-bWDLGA9o",
+      title: "",
     },
     {
       id: 3,
-      title: "Soft Skill",
-      image: "/images/dclogo.png",
-      youtubeLink: "https://www.youtube.com/watch?v=QwYchYZRGd4",
+      youtubeLink: "https://www.youtube.com/embed/QwYchYZRGd4",
+      videoId: "QwYchYZRGd4",
+      title: "",
     },
-  ]);
+  ])
 
-  const [newHighlight, setNewHighlight] = useState({ title: "", youtubeLink: "" });
-
-  const addHighlight = () => {
-    if (newHighlight.title && newHighlight.youtubeLink) {
-      const videoId = new URL(newHighlight.youtubeLink).searchParams.get("v");
-      const thumbnailUrl = `https://img.youtube.com/vi/${videoId}/0.jpg`;
-      setHighlights([
-        ...highlights,
-        {
-          id: highlights.length + 1,
-          title: newHighlight.title,
-          image: thumbnailUrl,
-          youtubeLink: newHighlight.youtubeLink,
-        },
-      ]);
-      setNewHighlight({ title: "", youtubeLink: "" });
+  useEffect(() => {
+    const fetchVideoTitles = async () => {
+      const updatedHighlights = await Promise.all(
+        highlights.map(async (highlight) => {
+          const response = await fetch(
+            `https://www.googleapis.com/youtube/v3/videos?id=${highlight.videoId}&key=${YOUTUBE_API_KEY}&part=snippet`
+          )
+          const data = await response.json()
+          const title = data.items[0]?.snippet?.title || "Unknown Title"
+          return { ...highlight, title }
+        })
+      )
+      setHighlights(updatedHighlights)
     }
-  };
+
+    fetchVideoTitles()
+  }, [])
 
   const blogs = [
     {
@@ -52,8 +53,7 @@ export default function ContentSection() {
       author: "Priyansh",
       avatar: "/a4.svg",
       image: "/nvidia.jpg",
-      caption:
-        "Exploring the future of AI and its impact on our daily lives. What are your thoughts?",
+      caption: "Exploring the future of AI and its impact on our daily lives. What are your thoughts?",
       likes: 42,
       comments: 15,
     },
@@ -62,12 +62,11 @@ export default function ContentSection() {
       author: "Bob Builder",
       avatar: "/a5.svg",
       image: "/placeholder.svg?height=400&width=400",
-      caption:
-        "Just launched a new website! Check out these amazing web development trends we incorporated.",
+      caption: "Just launched a new website! Check out these amazing web development trends we incorporated.",
       likes: 38,
       comments: 22,
     },
-  ];
+  ]
 
   return (
     <motion.div
@@ -78,36 +77,6 @@ export default function ContentSection() {
     >
       <div className="p-6">
         <h2 className="text-2xl font-bold mb-4 text-gray-800">Highlights</h2>
-        <div className="mb-4">
-          <h3 className="text-lg font-semibold mb-2">Add New Highlight</h3>
-          <div className="flex space-x-2">
-            <input
-              type="text"
-              placeholder="Title"
-              value={newHighlight.title}
-              onChange={(e) =>
-                setNewHighlight({ ...newHighlight, title: e.target.value })
-              }
-              className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-            <input
-              type="text"
-              placeholder="YouTube Link"
-              value={newHighlight.youtubeLink}
-              onChange={(e) =>
-                setNewHighlight({ ...newHighlight, youtubeLink: e.target.value })
-              }
-              className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-            <button
-              onClick={addHighlight}
-              className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 flex items-center"
-            >
-              <Plus className="w-5 h-5 mr-2" />
-              Add
-            </button>
-          </div>
-        </div>
         <div className="flex space-x-4 overflow-x-auto pb-4">
           {highlights.map((highlight) => (
             <motion.div
@@ -116,23 +85,19 @@ export default function ContentSection() {
               whileHover={{ scale: 1.05 }}
               transition={{ duration: 0.2 }}
             >
-              <a href={highlight.youtubeLink} target="_blank" rel="noopener noreferrer" className="group">
-                <div className="relative">
-                  <Image
-                    src={highlight.image || "/placeholder.svg"}
-                    alt={highlight.title}
-                    width={200}
-                    height={100}
-                    className="w-full h-24 object-cover rounded-lg mb-2"
-                  />
-                  <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-lg">
-                    <Youtube className="w-8 h-8 text-white" />
-                  </div>
-                </div>
-                <p className="text-sm font-semibold text-gray-700 truncate">
-                  {highlight.title}
-                </p>
-              </a>
+              <div className="relative">
+                <iframe
+                  width="200"
+                  height="100"
+                  src={highlight.youtubeLink}
+                  title={highlight.title}
+                  frameBorder="0"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                  className="w-full h-24 object-cover rounded-lg mb-2"
+                ></iframe>
+                <p className="text-sm font-semibold text-gray-700 truncate">{highlight.title}</p>
+              </div>
             </motion.div>
           ))}
         </div>
@@ -158,9 +123,7 @@ export default function ContentSection() {
                       height={40}
                       className="rounded-full"
                     />
-                    <span className="font-semibold text-gray-800">
-                      {blog.author}
-                    </span>
+                    <span className="font-semibold text-gray-800">{blog.author}</span>
                   </div>
                   <MoreHorizontal className="w-5 h-5 text-gray-500" />
                 </div>
@@ -195,6 +158,5 @@ export default function ContentSection() {
         </div>
       </div>
     </motion.div>
-  );
+  )
 }
-

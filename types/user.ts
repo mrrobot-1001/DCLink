@@ -7,5 +7,8 @@ export interface User {
   website?: string;
   avatar?: string;
   isConnected: boolean;
+  stream: string;
+  session?: string;
+  isadmin: boolean;
 }
 

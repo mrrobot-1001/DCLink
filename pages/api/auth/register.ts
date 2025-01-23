@@ -20,6 +20,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       currentlyWorkingAt,
       pastWorkedAt,
       session,
+      isAdmin,
     } = req.body
 
     // Validate required fields
@@ -43,6 +44,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         currentlyWorkingAt,
         pastWorkedAt,
         session,
+        isAdmin,
       })
 
       // Check if username or email already exists
@@ -78,6 +80,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           pastWorkedAt: pastWorkedAt || null,
           joinDate: new Date(),
           session: session || null,
+          isAdmin: isAdmin || false,
         },
       })
 
@@ -102,6 +105,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           pastWorkedAt: newUser.pastWorkedAt,
           joinDate: newUser.joinDate,
           session: newUser.session,
+          isAdmin: newUser.isAdmin,
         },
       })
     } catch (error) {
