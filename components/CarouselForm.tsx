@@ -1,9 +1,15 @@
+"use client"
+
 import { useState, useRef } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { toast } from "react-hot-toast"
+import { Trash2 } from "lucide-react"
 
-export default function CarouselForm({ onCarouselItemAdded }: { onCarouselItemAdded: () => void }) {
+export default function CarouselForm({
+  onCarouselItemAdded,
+  onCarouselItemDeleted,
+}: { onCarouselItemAdded: () => void; onCarouselItemDeleted: () => void }) {
   const [file, setFile] = useState<File | null>(null)
   const [alt, setAlt] = useState("")
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -58,6 +64,24 @@ export default function CarouselForm({ onCarouselItemAdded }: { onCarouselItemAd
     }
   }
 
+  const handleDelete = async (id: number) => {
+    try {
+      const response = await fetch(`/api/carousel/${id}`, {
+        method: "DELETE",
+      })
+      if (response.ok) {
+        toast.success("Carousel item deleted successfully")
+        onCarouselItemDeleted()
+      } else {
+        const errorData = await response.json()
+        toast.error(errorData.error || "Failed to delete carousel item")
+      }
+    } catch (error) {
+      console.error("Error deleting carousel item:", error)
+      toast.error("Failed to delete carousel item")
+    }
+  }
+
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div
@@ -71,6 +95,19 @@ export default function CarouselForm({ onCarouselItemAdded }: { onCarouselItemAd
       <input type="file" ref={fileInputRef} onChange={handleFileChange} accept="image/*" className="hidden" />
       <Input type="text" value={alt} onChange={(e) => setAlt(e.target.value)} placeholder="Alt Text" />
       <Button type="submit">Add Carousel Item</Button>
+
+      {/* Display existing carousel items with delete button */}
+      <div className="mt-4">
+        <h3 className="text-lg font-semibold mb-2">Existing Carousel Items</h3>
+        {/* You'll need to fetch and map through existing carousel items here */}
+        {/* This is a placeholder, replace with actual data */}
+        <div className="flex items-center justify-between bg-gray-100 p-2 rounded">
+          <span>Carousel Item 1</span>
+          <Button variant="destructive" size="sm" onClick={() => handleDelete(1)}>
+            <Trash2 size={16} />
+          </Button>
+        </div>
+      </div>
     </form>
   )
 }
