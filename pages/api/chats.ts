@@ -50,7 +50,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       id: chat.id,
       users: [chat.user, chat.connected],
       lastMessage: chat.messages[0]?.content || '',
-      unreadCount: 0 // You'll need to implement this logic
+      unreadCount: 0 
     }));
 
     res.status(200).json(formattedChats);

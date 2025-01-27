@@ -8,8 +8,8 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import ContentSection from "./ContentSection"
 import Carousel from "./Carousel"
-import HighlightForm from "./HighlightForm"
-import CarouselForm from "./CarouselForm"
+import HighlightForm from "./components/HighlightForm"
+import CarouselForm from "./components/CarouselForm"
 
 type User = {
   id: number

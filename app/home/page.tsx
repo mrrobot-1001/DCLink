@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import withAuth from "@/hoc/withAuth" // Import the HOC
+import withAuth from "@/hoc/withAuth" 
 import Navbar from "@/components/Navbar"
 import ChatSection from "@/components/ChatSection"
 import ContentSection from "@/components/ContentSection"
@@ -42,5 +42,5 @@ function HomePage() {
   )
 }
 
-export default withAuth(HomePage) // Wrap the HomePage component with the withAuth HOC
+export default withAuth(HomePage) 
 

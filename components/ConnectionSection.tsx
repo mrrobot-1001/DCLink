@@ -167,7 +167,7 @@ export default function ConnectionSection() {
             >
               <div className="flex items-center">
                 <Image
-                  src={user.avatar || "/default-avatar.png"}
+                  src={user.avatar || "/a1.svg"}
                   alt={user.username}
                   width={40}
                   height={40}

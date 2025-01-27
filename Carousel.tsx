@@ -23,8 +23,12 @@ export default function Carousel() {
   const fetchCarouselItems = async () => {
     try {
       const response = await fetch("/api/carousel")
-      const data = await response.json()
-      setCarouselItems(data)
+      if (response.ok) {
+        const data = await response.json()
+        setCarouselItems(data)
+      } else {
+        throw new Error("Failed to fetch carousel items")
+      }
     } catch (error) {
       console.error("Error fetching carousel items:", error)
       toast.error("Failed to fetch carousel items")
