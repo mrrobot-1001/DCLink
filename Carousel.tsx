@@ -23,12 +23,8 @@ export default function Carousel() {
   const fetchCarouselItems = async () => {
     try {
       const response = await fetch("/api/carousel")
-      if (response.ok) {
-        const data = await response.json()
-        setCarouselItems(data)
-      } else {
-        throw new Error("Failed to fetch carousel items")
-      }
+      const data = await response.json()
+      setCarouselItems(data)
     } catch (error) {
       console.error("Error fetching carousel items:", error)
       toast.error("Failed to fetch carousel items")
@@ -55,7 +51,12 @@ export default function Carousel() {
           {item.type === "image" ? (
             <Image src={item.src || "/placeholder.svg"} alt={item.alt || ""} layout="fill" objectFit="cover" />
           ) : (
-            <iframe src={item.src} className="w-full h-full" allowFullScreen></iframe>
+            <iframe
+              src={item.src}
+              className="w-full h-full"
+              allowFullScreen
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            ></iframe>
           )}
         </div>
       ))}
