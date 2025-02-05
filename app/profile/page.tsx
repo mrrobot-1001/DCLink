@@ -186,7 +186,7 @@ export default function UserProfilePage() {
           <div className="mt-5 border-t border-gray-200">
             <dl className="divide-y divide-gray-200">
               {[
-                { icon: Mail, label: "Email", field: "email" },
+                { icon: Mail, label: "Email", field: "email", readOnly: true },
                 { icon: MapPin, label: "Location", field: "location" },
                 { icon: LinkIcon, label: "Website", field: "website" },
                 { icon: Instagram, label: "Instagram", field: "instagramProfile" },
@@ -196,14 +196,14 @@ export default function UserProfilePage() {
                 { icon: Briefcase, label: "Currently Working At", field: "currentlyWorkingAt" },
                 { icon: Briefcase, label: "Past Work Experience", field: "pastWorkedAt" },
                 { icon: Calendar, label: "Session", field: "session" },
-              ].map(({ icon: Icon, label, field }) => (
+              ].map(({ icon: Icon, label, field, readOnly }) => (
                 <div key={field} className="py-4 sm:py-5 sm:grid sm:grid-cols-3 sm:gap-4 items-center">
                   <dt className="text-sm font-medium text-gray-500 flex items-center">
                     <Icon className="mr-2 h-5 w-5 text-indigo-500" />
                     {label}
                   </dt>
                   <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
-                    {isEditing ? (
+                    {isEditing && !readOnly ? (
                       field === "skills" || field === "pastWorkedAt" ? (
                         <textarea
                           name={field}
@@ -222,7 +222,7 @@ export default function UserProfilePage() {
                         />
                       )
                     ) : (
-                      <span className="bg-gray-100 px-3 py-2 rounded-md">
+                      <span className={`px-3 py-2 rounded-md ${readOnly ? "bg-gray-200" : "bg-gray-100"}`}>
                         {user[field as keyof User] || "Not specified"}
                       </span>
                     )}
@@ -272,4 +272,3 @@ export default function UserProfilePage() {
     </motion.div>
   )
 }
-

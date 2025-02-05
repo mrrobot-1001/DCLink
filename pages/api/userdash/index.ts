@@ -18,7 +18,18 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             id: true,
             username: true,
             email: true,
+            bio: true,
+            location: true,
+            website: true,
+            instagramProfile: true,
+            githubProfile: true,
+            linkedinProfile: true,
+            skills: true,
+            currentlyWorkingAt: true,
+            pastWorkedAt: true,
             session: true,
+            isAdmin: true,
+            joinDate: true,
           },
         })
       } else {
@@ -27,7 +38,18 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             id: true,
             username: true,
             email: true,
+            bio: true,
+            location: true,
+            website: true,
+            instagramProfile: true,
+            githubProfile: true,
+            linkedinProfile: true,
+            skills: true,
+            currentlyWorkingAt: true,
+            pastWorkedAt: true,
             session: true,
+            isAdmin: true,
+            joinDate: true,
           },
         })
       }
@@ -41,4 +63,3 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     res.status(405).end(`Method ${req.method} Not Allowed`)
   }
 }
-

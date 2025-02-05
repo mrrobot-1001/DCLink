@@ -110,12 +110,6 @@ export default function Navbar({ onPostClick }: NavbarProps) {
             >
               About
             </Link>
-            <Link
-              href="/feedback"
-              className="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-100"
-            >
-              Feedback
-            </Link>
             <button
               onClick={onPostClick}
               className="px-3 py-2 rounded-md text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 transition-colors duration-200 flex items-center"

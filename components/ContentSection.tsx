@@ -6,13 +6,14 @@ import Image from "next/image"
 import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { toast } from "react-hot-toast"
 
 interface Highlight {
   id: number
   youtubeLink: string
   caption: string
+  description: string
 }
 
 interface Blog {
@@ -95,10 +96,10 @@ export default function ContentSection() {
 
   return (
     <motion.div
-      className="bg-white rounded-lg shadow-md"
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
+      className="space-y-8"
     >
       <div className="p-6">
         <h2 className="text-2xl font-bold mb-4 text-gray-800">Highlights</h2>
@@ -145,9 +146,9 @@ export default function ContentSection() {
                   onChange={(e) => setEditingHighlight({ ...editingHighlight, youtubeLink: e.target.value })}
                 />
                 <Input
-                  placeholder="Caption"
-                  value={editingHighlight.caption}
-                  onChange={(e) => setEditingHighlight({ ...editingHighlight, caption: e.target.value })}
+                  placeholder="Description"
+                  value={editingHighlight.description}
+                  onChange={(e) => setEditingHighlight({ ...editingHighlight, description: e.target.value })}
                 />
                 <Button onClick={handleEditHighlight}>Update Highlight</Button>
               </div>
@@ -213,4 +214,3 @@ export default function ContentSection() {
     </motion.div>
   )
 }
-

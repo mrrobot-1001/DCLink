@@ -2,65 +2,126 @@
 import { useState, useEffect } from "react"
 import Image from "next/image"
 import { motion } from "framer-motion"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
+import { Calendar, ChevronLeft, ChevronRight } from "lucide-react"
+import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog"
+import { cn } from "@/lib/utils"
 
-type GalleryImage = {
+type GalleryEvent = {
   id: number
-  src: string
-  alt: string
+  title: string
+  date: string
+  thumbnail: string
+  images: { path: string }[]
+  videos: { path: string }[]
 }
 
 export default function GalleryPage() {
-  const [images, setImages] = useState<GalleryImage[]>([])
+  const [events, setEvents] = useState<GalleryEvent[]>([])
+  const [currentSlide, setCurrentSlide] = useState(0)
 
   useEffect(() => {
-    // Fetch images from an API or load them from a local source
-    // For now, we'll use dummy data
-    const dummyImages: GalleryImage[] = [
-      { id: 1, src: "/images/alu1.jpg", alt: "Alumni 1" },
-      { id: 2, src: "/images/alu2.jpg", alt: "Alumni 2" },
-      { id: 3, src: "/images/alu3.jpg", alt: "Alumni 3" },
-        { id: 4, src: "/images/alu4.jpg", alt: "Alumni 4" },
-        { id: 5, src: "/images/alu5.jpg", alt: "Alumni 5" },
-        { id: 6, src: "/images/alu6.jpg", alt: "Alumni 6" },
-        { id: 7, src: "/images/alu7.jpg", alt: "Alumni 7" },
-        { id: 8, src: "/images/alu8.jpg", alt: "Alumni 8" },
-        { id: 9, src: "/images/alu9.jpg", alt: "Alumni 9" },
-        { id: 10, src: "/images/alu10.jpg", alt: "Alumni 10" },
-        { id: 11, src: "/images/alu11.jpg", alt: "Alumni 11" },
-        { id: 12, src: "/images/alu12.jpg", alt: "Alumni 12" },
-        { id: 13, src: "/images/alu13.jpg", alt: "Alumni 13" },
-        { id: 14, src: "/images/alu14.jpg", alt: "Alumni 14" },
-        { id: 15, src: "/images/alu15.jpg", alt: "Alumni 15" },
-        { id: 16, src: "/images/alu16.jpg", alt: "Alumni 16" },
-        { id: 17, src: "/images/alu17.jpg", alt: "Alumni 17" },
-        { id: 18, src: "/images/alu18.jpg", alt: "Alumni 18" },
-       // { id: 19, src: "/images/alu19.jpg", alt: "Alumni 19" },
-        
-      // Add more dummy images as needed
-    ]
-    setImages(dummyImages)
+    fetchEvents()
   }, [])
 
+  const fetchEvents = async () => {
+    try {
+      const response = await fetch("/api/gallery")
+      if (response.ok) {
+        const data = await response.json()
+        setEvents(data)
+      }
+    } catch (error) {
+      console.error("Error fetching events:", error)
+    }
+  }
+
+  const nextSlide = (totalSlides: number) => {
+    setCurrentSlide((prev) => (prev + 1) % totalSlides)
+  }
+
+  const prevSlide = (totalSlides: number) => {
+    setCurrentSlide((prev) => (prev - 1 + totalSlides) % totalSlides)
+  }
+
   return (
-    <div className="min-h-screen bg-gray-100 py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-200 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-7xl mx-auto">
-        <h1 className="text-3xl font-bold text-gray-900 mb-6">Alumni Gallery</h1>
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-          {images.map((image) => (
+        <h1 className="text-5xl font-extrabold text-gray-900 mb-8 text-center">Event Gallery</h1>
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
+          {events.map((event) => (
             <motion.div
-              key={image.id}
-              className="bg-white rounded-lg shadow-md overflow-hidden"
-              whileHover={{ scale: 1.05 }}
-              transition={{ duration: 0.2 }}
+              key={event.id}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5 }}
             >
-              <Image
-                src={image.src || "/placeholder.svg"}
-                alt={image.alt}
-                width={300}
-                height={300}
-                className="w-full h-64 object-cover"
-              />
-             
+              <Card className="overflow-hidden hover:shadow-2xl transition-shadow duration-300 transform hover:scale-105">
+                <CardHeader className="p-0">
+                  <Dialog>
+                    <DialogTrigger asChild>
+                      <Button variant="ghost" className="w-full p-0">
+                        <Image
+                          src={event.thumbnail || "/placeholder.svg"}
+                          alt={event.title}
+                          width={400}
+                          height={300}
+                          className="w-full h-48 object-cover transition-transform duration-300 hover:scale-105"
+                        />
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent className="max-w-4xl p-0 backdrop-blur-md bg-white/80 rounded-lg shadow-lg">
+                      <div className="relative">
+                        {[...event.images, ...event.videos].map((item, index) => (
+                          <div
+                            key={index}
+                            className={cn(
+                              "transition-opacity duration-300 ease-in-out",
+                              currentSlide === index ? "opacity-100" : "opacity-0 hidden",
+                            )}
+                          >
+                            {item.path.endsWith(".mp4") ? (
+                              <video src={item.path} controls className="w-full h-auto rounded-lg" />
+                            ) : (
+                              <Image
+                                src={item.path || "/placeholder.svg"}
+                                alt={`Slide ${index + 1}`}
+                                width={800}
+                                height={600}
+                                className="w-full h-auto rounded-lg"
+                              />
+                            )}
+                          </div>
+                        ))}
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="absolute top-1/2 left-2 transform -translate-y-1/2 bg-white rounded-full shadow-md hover:shadow-lg"
+                          onClick={() => prevSlide([...event.images, ...event.videos].length)}
+                        >
+                          <ChevronLeft className="h-6 w-6 text-gray-800" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="absolute top-1/2 right-2 transform -translate-y-1/2 bg-white rounded-full shadow-md hover:shadow-lg"
+                          onClick={() => nextSlide([...event.images, ...event.videos].length)}
+                        >
+                          <ChevronRight className="h-6 w-6 text-gray-800" />
+                        </Button>
+                      </div>
+                    </DialogContent>
+                  </Dialog>
+                </CardHeader>
+                <CardContent className="p-4">
+                  <CardTitle className="text-lg mb-2 line-clamp-1 font-semibold">{event.title}</CardTitle>
+                  <div className="flex items-center text-sm text-gray-600">
+                    <Calendar className="w-4 h-4 mr-1" />
+                    {new Date(event.date).toLocaleDateString()}
+                  </div>
+                </CardContent>
+              </Card>
             </motion.div>
           ))}
         </div>
@@ -68,4 +129,3 @@ export default function GalleryPage() {
     </div>
   )
 }
-

@@ -1,10 +1,11 @@
 "use client"
 
-import { useState, useRef } from "react"
+import { useState, useRef, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { toast } from "react-hot-toast"
 import { Trash2 } from "lucide-react"
+import Image from "next/image"
 
 export default function CarouselForm({
   onCarouselItemAdded,
@@ -12,7 +13,28 @@ export default function CarouselForm({
 }: { onCarouselItemAdded: () => void; onCarouselItemDeleted: () => void }) {
   const [file, setFile] = useState<File | null>(null)
   const [alt, setAlt] = useState("")
+  const [carouselItems, setCarouselItems] = useState<Array<{ id: number; src: string; alt: string }>>([])
   const fileInputRef = useRef<HTMLInputElement>(null)
+
+  useEffect(() => {
+    fetchCarouselItems()
+  }, [])
+
+  const fetchCarouselItems = async () => {
+    try {
+      const response = await fetch("/api/carousel")
+      if (response.ok) {
+        const data = await response.json()
+        setCarouselItems(data.map((item: any) => ({
+          ...item,
+          src: item.src.startsWith('http') ? item.src : `${window.location.origin}${item.src}`
+        })))
+      }
+    } catch (error) {
+      console.error("Error fetching carousel items:", error)
+      toast.error("Failed to fetch carousel items")
+    }
+  }
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -49,10 +71,10 @@ export default function CarouselForm({
         body: formData,
       })
       if (response.ok) {
-        const newCarouselItem = await response.json()
         toast.success("Carousel item added successfully")
         setFile(null)
         setAlt("")
+        fetchCarouselItems() // Refresh the list after adding
         onCarouselItemAdded()
       } else {
         const errorData = await response.json()
@@ -66,19 +88,33 @@ export default function CarouselForm({
 
   const handleDelete = async (id: number) => {
     try {
+      const token = localStorage.getItem("token")
+      if (!token) {
+        toast.error("You must be logged in to delete carousel items")
+        return
+      }
+
       const response = await fetch(`/api/carousel/${id}`, {
         method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
       })
-      if (response.ok) {
-        toast.success("Carousel item deleted successfully")
-        onCarouselItemDeleted()
-      } else {
-        const errorData = await response.json()
-        toast.error(errorData.error || "Failed to delete carousel item")
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to delete carousel item")
       }
+
+      // Update local state only after successful deletion
+      setCarouselItems(prevItems => prevItems.filter(item => item.id !== id))
+      toast.success("Carousel item deleted successfully")
+      onCarouselItemDeleted()
     } catch (error) {
       console.error("Error deleting carousel item:", error)
-      toast.error("Failed to delete carousel item")
+      toast.error(error instanceof Error ? error.message : "Failed to delete carousel item")
     }
   }
 
@@ -97,18 +133,33 @@ export default function CarouselForm({
       <Button type="submit">Add Carousel Item</Button>
 
       {/* Display existing carousel items with delete button */}
-      <div className="mt-4">
+      <div className="mt-4 space-y-4">
         <h3 className="text-lg font-semibold mb-2">Existing Carousel Items</h3>
-        {/* You'll need to fetch and map through existing carousel items here */}
-        {/* This is a placeholder, replace with actual data */}
-        <div className="flex items-center justify-between bg-gray-100 p-2 rounded">
-          <span>Carousel Item 1</span>
-          <Button variant="destructive" size="sm" onClick={() => handleDelete(1)}>
-            <Trash2 size={16} />
-          </Button>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {carouselItems.map((item) => (
+            <div key={item.id} className="relative group h-48">
+              <div className="relative w-full h-full">
+                <Image
+                  src={item.src}
+                  alt={item.alt}
+                  fill
+                  className="object-cover rounded-lg"
+                />
+              </div>
+              <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-50 transition-all duration-300 rounded-lg flex items-center justify-center">
+                <button
+                  type="button"
+                  onClick={() => handleDelete(item.id)}
+                  className="p-2 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                >
+                  <Trash2 className="h-5 w-5" />
+                </button>
+              </div>
+              <p className="mt-2 text-sm text-gray-600">{item.alt}</p>
+            </div>
+          ))}
         </div>
       </div>
     </form>
   )
 }
-

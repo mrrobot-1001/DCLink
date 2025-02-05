@@ -45,16 +45,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         pastWorkedAt,
         session,
       },
+      include: {
+        connections: true,
+      },
     })
 
     // Return the updated user profile
-    return res.status(200).json({
-      ...updatedUser,
-      connectionCount: updatedUser.connections.length,
-    })
+    return res.status(200).json(updatedUser)
   } catch (error) {
     console.error("Error updating user profile:", error)
     return res.status(500).json({ error: "Internal Server Error" })
   }
 }
-
