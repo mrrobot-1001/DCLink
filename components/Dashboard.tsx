@@ -94,10 +94,15 @@ export default function Dashboard() {
 
   const handleDeleteUser = async (userId: number) => {
     try {
+      const token = localStorage.getItem("token")
+      if (!token) {
+        throw new Error("No authentication token found")
+      }
+
       const response = await fetch(`/api/userdash/${userId}`, {
         method: "DELETE",
         headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
+          Authorization: `Bearer ${token}`,
         },
       })
 

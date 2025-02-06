@@ -1,13 +1,14 @@
 "use client"
 
 import { motion } from "framer-motion"
-import { Heart, MessageCircle, Share2, MoreHorizontal, Edit, Trash } from "lucide-react"
+import { Share2, MoreHorizontal, Edit, Trash } from "lucide-react"
 import Image from "next/image"
-import { useState, useEffect } from "react"
+import { useState, useEffect, forwardRef, useImperativeHandle } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { toast } from "react-hot-toast"
+import { jwtDecode } from "jwt-decode"
 
 interface Highlight {
   id: number
@@ -16,25 +17,38 @@ interface Highlight {
   description: string
 }
 
-interface Blog {
+interface Post {
   id: number
   author: string
+  authorId: number
   avatar: string
-  image: string
+  mediaUrl: string
+  mediaType: "image" | "video"
   caption: string
-  likes: number
-  comments: number
 }
 
-export default function ContentSection() {
+export interface ContentSectionRef {
+  fetchPosts: () => Promise<void>
+}
+
+interface ContentSectionProps {}
+
+const ContentSection = forwardRef<ContentSectionRef, ContentSectionProps>((props, ref) => {
   const [highlights, setHighlights] = useState<Highlight[]>([])
-  const [blogs, setBlogs] = useState<Blog[]>([])
+  const [posts, setPosts] = useState<Post[]>([])
   const [editingHighlight, setEditingHighlight] = useState<Highlight | null>(null)
+  const [isPostFormOpen, setIsPostFormOpen] = useState(false)
+  const [currentUserId, setCurrentUserId] = useState<number | null>(null)
 
   useEffect(() => {
     fetchHighlights()
-    fetchBlogs()
+    fetchPosts()
+    getCurrentUser()
   }, [])
+
+  useImperativeHandle(ref, () => ({
+    fetchPosts
+  }))
 
   const fetchHighlights = async () => {
     try {
@@ -47,14 +61,29 @@ export default function ContentSection() {
     }
   }
 
-  const fetchBlogs = async () => {
+  const fetchPosts = async () => {
     try {
-      const response = await fetch("/api/blogs")
+      const response = await fetch("/api/posts")
+      if (!response.ok) {
+        throw new Error("Failed to fetch posts")
+      }
       const data = await response.json()
-      setBlogs(data)
+      setPosts(data)
     } catch (error) {
-      console.error("Error fetching blogs:", error)
-      toast.error("Failed to fetch blogs")
+      console.error("Error fetching posts:", error)
+      toast.error("Failed to fetch posts")
+    }
+  }
+
+  const getCurrentUser = () => {
+    const token = localStorage.getItem('token')
+    if (token) {
+      try {
+        const decodedToken = jwtDecode<{ userId: number }>(token)
+        setCurrentUserId(decodedToken.userId)
+      } catch (error) {
+        console.error('Error decoding token:', error)
+      }
     }
   }
 
@@ -92,6 +121,53 @@ export default function ContentSection() {
       console.error("Error deleting highlight:", error)
       toast.error("Failed to delete highlight")
     }
+  }
+
+  const handleDeletePost = async (postId: number) => {
+    try {
+      const token = localStorage.getItem('token')
+      if (!token) {
+        toast.error("Please login to delete posts")
+        return
+      }
+
+      const response = await fetch(`/api/posts?id=${postId}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      })
+
+      // Try to parse the response as JSON only if there's content
+      let data
+      const contentType = response.headers.get("content-type")
+      if (contentType && contentType.includes("application/json")) {
+        data = await response.json()
+      }
+
+      if (!response.ok) {
+        toast.error(data?.error || 'Failed to delete post')
+        return
+      }
+
+      toast.success('Post deleted successfully')
+      await fetchPosts() // Refresh the posts list
+    } catch (err) {
+      console.error('Error deleting post:', err)
+      toast.error('Failed to delete post')
+    }
+  }
+
+  const handlePostCreated = () => {
+    fetchPosts() // Refresh posts after a new post is created
+    setIsPostFormOpen(false)
+  }
+
+  const handleSharePost = (postId: number) => {
+    const postUrl = `${window.location.origin}/post/${postId}`
+    navigator.clipboard.writeText(postUrl)
+    toast.success("Post link copied to clipboard")
   }
 
   return (
@@ -160,9 +236,9 @@ export default function ContentSection() {
         <div className="p-6">
           <h2 className="text-2xl font-bold mb-4 text-gray-800">Posts</h2>
           <div className="space-y-6">
-            {blogs.map((blog) => (
+            {posts.map((post) => (
               <motion.div
-                key={blog.id}
+                key={post.id}
                 className="bg-gray-50 rounded-lg shadow"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -171,40 +247,47 @@ export default function ContentSection() {
                 <div className="p-4 flex items-center justify-between">
                   <div className="flex items-center space-x-3">
                     <Image
-                      src={blog.avatar || "/placeholder.svg"}
-                      alt={blog.author}
+                      src={post.avatar || "/placeholder.svg"}
+                      alt={post.author}
                       width={40}
                       height={40}
                       className="rounded-full"
                     />
-                    <span className="font-semibold text-gray-800">{blog.author}</span>
+                    <span className="font-semibold text-gray-800">{post.author}</span>
                   </div>
                   <MoreHorizontal className="w-5 h-5 text-gray-500" />
                 </div>
-                <Image
-                  src={blog.image || "/placeholder.svg"}
-                  alt="Blog post"
-                  width={400}
-                  height={400}
-                  className="w-full object-cover"
-                />
+                {post.mediaType === "image" ? (
+                  <Image
+                    src={post.mediaUrl || "/placeholder.svg"}
+                    alt="Post image"
+                    width={400}
+                    height={400}
+                    className="w-full object-cover"
+                  />
+                ) : (
+                  <video src={post.mediaUrl} className="w-full" controls />
+                )}
                 <div className="p-4">
                   <div className="flex justify-between items-center mb-2">
-                    <div className="flex space-x-4">
-                      <button className="flex items-center text-sm text-gray-600">
-                        <Heart className="w-5 h-5 mr-1" />
-                        {blog.likes}
-                      </button>
-                      <button className="flex items-center text-sm text-gray-600">
-                        <MessageCircle className="w-5 h-5 mr-1" />
-                        {blog.comments}
-                      </button>
-                    </div>
-                    <button className="flex items-center text-sm text-gray-600">
-                      <Share2 className="w-5 h-5" />
+                    <button
+                      onClick={() => handleSharePost(post.id)}
+                      className="flex items-center text-sm text-gray-600"
+                    >
+                      <Share2 className="w-5 h-5 mr-1" />
+                      Share
                     </button>
+                    {currentUserId === post.authorId && (
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleDeletePost(post.id)}
+                      >
+                        <Trash className="h-4 w-4 text-red-500" />
+                      </Button>
+                    )}
                   </div>
-                  <p className="text-sm text-gray-700">{blog.caption}</p>
+                  <p className="text-sm text-gray-700">{post.caption}</p>
                 </div>
               </motion.div>
             ))}
@@ -213,4 +296,6 @@ export default function ContentSection() {
       </div>
     </motion.div>
   )
-}
+})
+
+export default ContentSection

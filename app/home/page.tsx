@@ -1,18 +1,27 @@
 "use client"
 
-import { useState } from "react"
-import withAuth from "@/hoc/withAuth" 
+import { useState, useRef } from "react"
+import withAuth from "@/hoc/withAuth"
 import Navbar from "@/components/Navbar"
+import ContentSection, { ContentSectionRef } from "@/components/ContentSection"
 import ChatSection from "@/components/ChatSection"
-import ContentSection from "@/components/ContentSection"
 import ConnectionSection from "@/components/ConnectionSection"
 import PostForm from "@/components/PostForm"
 import MobileChatButton from "@/components/MobileChatButton"
 import MobileConnectionButton from "@/components/MobileConnectionButton"
+import MobileChatList from "@/components/MobileChatList"
+import MobileConnectionList from "@/components/MobileConnectionList"
 import Carousel from "@/components/Carousel"
 
 function HomePage() {
   const [isPostFormOpen, setIsPostFormOpen] = useState(false)
+  const contentSectionRef = useRef<ContentSectionRef>(null)
+
+  const handlePostCreated = () => {
+    setIsPostFormOpen(false)
+    // Refresh posts in ContentSection
+    contentSectionRef.current?.fetchPosts()
+  }
 
   return (
     <div className="min-h-screen bg-gray-100">
@@ -25,7 +34,7 @@ function HomePage() {
               <ChatSection />
             </div>
             <div className="lg:col-span-6">
-              <ContentSection />
+              <ContentSection ref={contentSectionRef} />
             </div>
             <div className="hidden lg:block lg:col-span-3">
               <ConnectionSection />
@@ -33,7 +42,11 @@ function HomePage() {
           </div>
         </div>
       </div>
-      <PostForm isOpen={isPostFormOpen} onClose={() => setIsPostFormOpen(false)} />
+      <PostForm 
+        isOpen={isPostFormOpen} 
+        onClose={() => setIsPostFormOpen(false)} 
+        onPostCreated={handlePostCreated}
+      />
       <div className="lg:hidden">
         <MobileChatButton />
         <MobileConnectionButton />
@@ -42,5 +55,4 @@ function HomePage() {
   )
 }
 
-export default withAuth(HomePage) 
-
+export default withAuth(HomePage)
